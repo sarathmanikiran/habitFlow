@@ -1,0 +1,146 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- Validations ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'joinedAt']) 
+        && data.keys().size() <= 10
+        && data.uid == request.auth.uid
+        && data.uid is string && data.uid.size() <= 128;
+    }
+
+    function isValidHabit(data) {
+      return data.keys().hasAll(['userId', 'name', 'category', 'createdAt'])
+        && data.keys().size() <= 15
+        && data.userId == request.auth.uid
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+        && data.category in ['Health', 'Mind', 'Productivity', 'Lifestyle', 'Fitness', 'Work', 'Growth']
+        && (data.createdAt == request.time || data.createdAt is timestamp || data.createdAt is number);
+    }
+
+    function isValidCompletion(data) {
+      return data.keys().hasAll(['habitId', 'userId', 'date', 'completed', 'updatedAt'])
+        && data.keys().size() == 5
+        && data.userId == request.auth.uid
+        && data.habitId is string && data.habitId.size() <= 128
+        && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.completed is bool
+        && (data.updatedAt == request.time || data.updatedAt is timestamp || data.updatedAt is number);
+    }
+
+    function isValidGoal(data) {
+      return data.keys().hasAll(['userId', 'title', 'category', 'progress', 'completed', 'createdAt'])
+        && data.keys().size() <= 12
+        && data.userId == request.auth.uid
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.category is string
+        && data.progress is number && data.progress >= 0 && data.progress <= 100
+        && data.completed is bool
+        && (data.createdAt == request.time || data.createdAt is timestamp || data.createdAt is number);
+    }
+
+    function isValidTask(data) {
+      return data.keys().hasAll(['title', 'completed', 'createdAt'])
+        && data.keys().size() <= 8
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.completed is bool
+        && (data.assignee is string || !('assignee' in data))
+        && (data.dueDate is string || !('dueDate' in data))
+        && (data.createdAt == request.time || data.createdAt is timestamp || data.createdAt is number);
+    }
+
+    // --- Paths ---
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidId(userId)
+        && isValidUser(incoming())
+        && incoming().uid == existing().uid
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'hasCompletedOnboarding']);
+    }
+
+    match /habits/{habitId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && isValidId(habitId) && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidHabit(incoming());
+      allow update: if isSignedIn() && isValidId(habitId)
+        && resource.data.userId == request.auth.uid
+        && isValidHabit(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'category', 'color', 'frequency', 'reminderTime', 'reminderDays', 'archived']);
+      allow delete: if isSignedIn() && isValidId(habitId) && resource.data.userId == request.auth.uid;
+    }
+
+    match /completions/{completionId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && isValidId(completionId) && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidCompletion(incoming());
+      allow update: if isSignedIn() && isValidId(completionId)
+        && resource.data.userId == request.auth.uid
+        && isValidCompletion(incoming())
+        && incoming().userId == existing().userId
+        && incoming().habitId == existing().habitId
+        && incoming().date == existing().date
+        && incoming().diff(existing()).affectedKeys().hasOnly(['completed', 'updatedAt']);
+      allow delete: if isSignedIn() && isValidId(completionId) && resource.data.userId == request.auth.uid;
+    }
+
+    match /goals/{goalId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && isValidId(goalId) && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidGoal(incoming());
+      allow update: if isSignedIn() && isValidId(goalId)
+        && resource.data.userId == request.auth.uid
+        && isValidGoal(incoming())
+        && incoming().userId == existing().userId
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'category', 'deadline', 'items', 'progress', 'completed']);
+      allow delete: if isSignedIn() && isValidId(goalId) && resource.data.userId == request.auth.uid;
+      
+      match /tasks/{taskId} {
+        allow list: if isSignedIn() && isValidId(goalId) 
+          && get(/databases/$(database)/documents/goals/$(goalId)).data.userId == request.auth.uid;
+        allow get: if isSignedIn() && isValidId(goalId) && isValidId(taskId)
+          && get(/databases/$(database)/documents/goals/$(goalId)).data.userId == request.auth.uid;
+        allow create: if isSignedIn() && isValidId(goalId)
+          && get(/databases/$(database)/documents/goals/$(goalId)).data.userId == request.auth.uid
+          && isValidTask(incoming());
+        allow update: if isSignedIn() && isValidId(goalId) && isValidId(taskId)
+          && get(/databases/$(database)/documents/goals/$(goalId)).data.userId == request.auth.uid
+          && isValidTask(incoming())
+          && incoming().createdAt == existing().createdAt
+          && incoming().diff(existing()).affectedKeys().hasOnly(['title', 'completed', 'assignee', 'dueDate']);
+        allow delete: if isSignedIn() && isValidId(goalId) && isValidId(taskId)
+          && get(/databases/$(database)/documents/goals/$(goalId)).data.userId == request.auth.uid;
+      }
+    }
+  }
+}

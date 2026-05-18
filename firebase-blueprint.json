@@ -1,0 +1,78 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Public profile for each user",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "joinedAt": { "type": "number" }
+      },
+      "required": ["uid", "joinedAt"]
+    },
+    "Habit": {
+      "title": "Habit",
+      "description": "Definition of a habit to track",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["Health", "Mind", "Productivity", "Lifestyle"] },
+        "color": { "type": "string" },
+        "frequency": { "type": "string", "enum": ["daily", "weekly"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "name", "category", "createdAt"]
+    },
+    "Completion": {
+      "title": "Habit Completion",
+      "description": "A daily check for a specific habit",
+      "type": "object",
+      "properties": {
+        "habitId": { "type": "string" },
+        "userId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "completed": { "type": "boolean" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["habitId", "userId", "date", "completed", "updatedAt"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "A long-term target for the user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "deadline": { "type": "string" },
+        "items": { "type": "string" },
+        "progress": { "type": "number" },
+        "completed": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "title", "category", "progress", "completed", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document"
+    },
+    "/habits/{habitId}": {
+      "schema": "Habit",
+      "description": "Collection of all habits"
+    },
+    "/completions/{completionId}": {
+      "schema": "Completion",
+      "description": "Individual habit completions tracked by date"
+    },
+    "/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "User specific goals"
+    }
+  }
+}
