@@ -13,7 +13,7 @@ import {
   Award,
   Medal
 } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
+import { cn } from '../lib/utils';
 import { 
   AreaChart, 
   Area, 
@@ -24,7 +24,7 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 
-import { useHabitData } from '@/src/hooks/useHabitData';
+import { useHabitData } from '../hooks/useHabitData';
 import { format, subDays, isSameDay } from 'date-fns';
 
 const HABIT_COLORS = [

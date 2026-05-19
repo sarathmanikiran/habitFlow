@@ -15,7 +15,7 @@ import {
   Archive,
   ArchiveRestore
 } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
+import { cn } from '../lib/utils';
 import { 
   format, 
   startOfMonth, 
@@ -48,7 +48,7 @@ const HABIT_COLORS = [
   { name: 'Fuchsia', value: 'fuchsia', bg: 'bg-fuchsia-500', text: 'text-fuchsia-400' },
 ];
 
-import { useHabitData } from '@/src/hooks/useHabitData';
+import { useHabitData } from '../hooks/useHabitData';
 
 export function Habits() {
   const { habits: dbHabits, completions, loading, addHabit, toggleCompletion, calculateStreak, deleteHabit, toggleArchive } = useHabitData();

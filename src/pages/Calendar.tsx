@@ -7,7 +7,7 @@ import {
   Calendar as CalendarIcon,
   Maximize2
 } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
+import { cn } from '../lib/utils';
 import { 
   format, 
   startOfMonth, 
@@ -21,7 +21,7 @@ import {
   subMonths
 } from 'date-fns';
 
-import { useHabitData } from '@/src/hooks/useHabitData';
+import { useHabitData } from '../hooks/useHabitData';
 
 export function Calendar() {
   const { habits, completions } = useHabitData();

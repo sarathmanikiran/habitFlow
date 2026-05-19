@@ -12,8 +12,8 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
-import { useTheme } from '@/src/hooks/useTheme';
+import { cn } from '../../lib/utils';
+import { useTheme } from '../../hooks/useTheme';
 
 export type Page = 'dashboard' | 'habits' | 'calendar' | 'stats' | 'ai-coach' | 'goals' | 'settings';
 

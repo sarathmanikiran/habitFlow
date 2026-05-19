@@ -1,12 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Zap, Chrome, ShieldCheck, Github, Layout } from 'lucide-react';
+import { Zap, Chrome, ShieldCheck, Github, Layout, Loader2 } from 'lucide-react';
 
 interface LoginProps {
-  onLogin: () => void;
+  onLogin: () => Promise<void> | void;
 }
 
 export function Login({ onLogin }: LoginProps) {
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLoginClick = () => {
+    setIsLoggingIn(true);
+    // Defer the execution to let the UI paint the loading state first, resolving INP
+    setTimeout(async () => {
+      try {
+        await onLogin();
+      } catch (e) {
+        // Handle error (if throwing)
+      } finally {
+        // Reset state so user can try again if it fails or popup blocked
+        setIsLoggingIn(false);
+      }
+    }, 10);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#050505] overflow-hidden relative transition-colors duration-300">
       {/* Background Decor */}
@@ -29,11 +46,16 @@ export function Login({ onLogin }: LoginProps) {
         
         <div className="space-y-4">
           <button 
-            onClick={onLogin}
-            className="w-full flex items-center justify-center gap-4 bg-slate-100 dark:bg-white text-slate-900 dark:text-black py-4 rounded-xl font-bold transition-all shadow-lg hover:bg-slate-200 dark:hover:bg-slate-100 active:scale-95 group"
+            onClick={handleLoginClick}
+            disabled={isLoggingIn}
+            className="w-full flex items-center justify-center gap-4 bg-slate-100 dark:bg-white text-slate-900 dark:text-black py-4 rounded-xl font-bold transition-all shadow-lg hover:bg-slate-200 dark:hover:bg-slate-100 active:scale-95 group disabled:opacity-70 disabled:active:scale-100"
           >
-            <Chrome className="w-5 h-5 group-hover:rotate-[20deg] transition-transform text-indigo-600" />
-            Sign in with Google
+            {isLoggingIn ? (
+              <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+            ) : (
+              <Chrome className="w-5 h-5 group-hover:rotate-[20deg] transition-transform text-indigo-600" />
+            )}
+            {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
           </button>
           
           <button className="w-full flex items-center justify-center gap-4 bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white py-4 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-white/10 transition-all group">

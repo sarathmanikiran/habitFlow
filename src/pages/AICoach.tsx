@@ -12,10 +12,10 @@ import {
   BarChart3,
   Plus
 } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
+import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 
-import { useHabitData } from '@/src/hooks/useHabitData';
+import { useHabitData } from '../hooks/useHabitData';
 
 interface Message {
   role: 'user' | 'assistant';

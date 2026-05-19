@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTheme } from '@/src/hooks/useTheme';
+import { useTheme } from '../../hooks/useTheme';
 import { Moon, Sun } from 'lucide-react';
 
 export function MobileHeader() {

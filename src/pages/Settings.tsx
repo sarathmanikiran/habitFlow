@@ -17,7 +17,7 @@ import {
     LogOut,
     X
 } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
+import { cn } from '../lib/utils';
 import { auth, db } from '../firebase/config';
 import { signOut, deleteUser } from 'firebase/auth';
 import { collection, query, where, getDocs, writeBatch, orderBy } from 'firebase/firestore';

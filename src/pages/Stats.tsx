@@ -7,7 +7,7 @@ import {
     Calendar as CalendarIcon,
     Award
 } from 'lucide-react';
-import { cn } from '@/src/lib/utils';
+import { cn } from '../lib/utils';
 import { 
   BarChart, 
   Bar, 
@@ -40,7 +40,7 @@ const pieData = [
   { name: 'Lifestyle', value: 15, color: '#f43f5e' },
 ];
 
-import { useHabitData } from '@/src/hooks/useHabitData';
+import { useHabitData } from '../hooks/useHabitData';
 import { subDays, format, startOfWeek, eachDayOfInterval } from 'date-fns';
 
 export function Stats() {

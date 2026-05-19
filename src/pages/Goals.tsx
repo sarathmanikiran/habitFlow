@@ -1,5 +1,5 @@
-import { useGoalData } from '@/src/hooks/useGoalData';
-import { useGoalTasks } from '@/src/hooks/useGoalTasks';
+import { useGoalData } from '../hooks/useGoalData';
+import { useGoalTasks } from '../hooks/useGoalTasks';
 import { AnimatePresence, motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { Plus, Target, CheckCircle2, Clock, Trash2, ArrowUpRight, X, Award, ChevronDown, ChevronUp, User } from 'lucide-react';
