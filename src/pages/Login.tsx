@@ -9,19 +9,16 @@ interface LoginProps {
 export function Login({ onLogin }: LoginProps) {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  const handleLoginClick = () => {
+  const handleLoginClick = async () => {
     setIsLoggingIn(true);
-    // Defer the execution to let the UI paint the loading state first, resolving INP
-    setTimeout(async () => {
-      try {
-        await onLogin();
-      } catch (e) {
-        // Handle error (if throwing)
-      } finally {
-        // Reset state so user can try again if it fails or popup blocked
-        setIsLoggingIn(false);
-      }
-    }, 10);
+    try {
+      await onLogin();
+    } catch (e) {
+      // Handle error
+      console.error(e);
+    } finally {
+      setIsLoggingIn(false);
+    }
   };
 
   return (

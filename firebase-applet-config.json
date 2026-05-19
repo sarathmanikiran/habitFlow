@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0486467954",
-  "appId": "1:1087977642097:web:cdc0e9c7aa74b9048163d0",
-  "apiKey": "AIzaSyAMwZIgn2anmiRFPtY-23TmXZBMLdheV_8",
-  "authDomain": "gen-lang-client-0486467954.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-58bdf737-0413-4245-a4f5-f3dedff648e5",
-  "storageBucket": "gen-lang-client-0486467954.firebasestorage.app",
-  "messagingSenderId": "1087977642097",
-  "measurementId": ""
+  "projectId": "habitflow-1228",
+  "appId": "1:663073245401:web:77ba0eb6256cc1804416c8",
+  "apiKey": "AIzaSyDu_ksRzu3Kr8MxwLMjstl6Y0MbDzjgZf8",
+  "authDomain": "habitflow-1228.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "habitflow-1228.firebasestorage.app",
+  "messagingSenderId": "663073245401",
+  "measurementId": "G-RYZ8CRS1BD"
 }
