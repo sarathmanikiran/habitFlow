@@ -10,17 +10,3 @@ export const db = firebaseConfig.firestoreDatabaseId && firebaseConfig.firestore
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Validation connection to Firestore
-async function testConnection() {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    console.log('Firebase connected successfully');
-  } catch (error) {
-    console.error("Firebase connection error:", error);
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration.");
-    }
-  }
-}
-
-testConnection();

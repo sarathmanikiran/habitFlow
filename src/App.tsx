@@ -26,9 +26,13 @@ export default function App() {
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login failed', error);
-      throw error;
+      if (error?.code === 'auth/network-request-failed') {
+        alert("Network Error: Could not connect to authentication server. This is often caused by ad blockers, brave shields, or cross-site tracking prevention. Please disable them for this site and try again.");
+      } else if (error?.code !== 'auth/popup-closed-by-user') {
+        alert(`Login failed: ${error.message}`);
+      }
     }
   };
 
