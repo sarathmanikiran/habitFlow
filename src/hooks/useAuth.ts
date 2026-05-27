@@ -24,23 +24,35 @@ export function useAuth() {
       
       if (authUser) {
         const profileRef = doc(db, 'users', authUser.uid);
-        const profileSnap = await getDoc(profileRef);
-        
-        if (profileSnap.exists()) {
-          setProfile({ id: profileSnap.id, ...profileSnap.data() } as any);
-        } else {
-          // Create new profile
-          const newProfile = {
-            uid: authUser.uid,
-            displayName: authUser.displayName,
-            email: authUser.email,
-            photoURL: authUser.photoURL,
-            joinedAt: Date.now(),
-            hasCompletedOnboarding: false
-          };
-          await setDoc(profileRef, newProfile);
-          setProfile(newProfile as any);
+        try {
+          const profileSnap = await getDoc(profileRef);
+          
+          if (profileSnap.exists()) {
+            setProfile({ id: profileSnap.id, ...profileSnap.data() } as any);
+          } else {
+            // Create new profile
+            const newProfile = {
+              uid: authUser.uid,
+              displayName: authUser.displayName,
+              email: authUser.email,
+              photoURL: authUser.photoURL,
+              joinedAt: Date.now(),
+              hasCompletedOnboarding: false
+            };
+            await setDoc(profileRef, newProfile);
+            setProfile(newProfile as any);
+          }
+        } catch (error: any) {
+          console.error("Firestore Error in useAuth:", error);
+          if (error?.message?.includes('offline')) {
+             alert(`Could not connect to Firestore database. Please ensure you have enabled "Cloud Firestore" in your Firebase Console (habit-flow-1228) and created a database.`);
+          } else if (error?.message?.includes('permission')) {
+             alert(`Missing permissions. Please update your Firestore security rules.`);
+          } else {
+             alert(`Database error: ${error.message}`);
+          }
         }
+
       } else {
         setProfile(null);
       }

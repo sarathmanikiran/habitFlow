@@ -26,8 +26,15 @@ enum OperationType {
 }
 
 function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  if (errorMessage.includes('offline')) {
+    alert('Could not connect to Firestore database. Please ensure you have enabled "Cloud Firestore" in your Firebase Console and created a database.');
+  } else if (errorMessage.includes('permission')) {
+    alert('Missing permissions. Please update your Firestore security rules.');
+  }
+  
   const errInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errorMessage,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,
@@ -37,7 +44,6 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
     path
   };
   console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
 }
 
 export function useHabitData() {
