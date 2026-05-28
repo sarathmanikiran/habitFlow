@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { motion } from 'motion/react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { 
   Flame, 
   TrendingUp, 
@@ -12,7 +12,10 @@ import {
   Activity,
   Award,
   Medal,
-  Share2
+  Share2,
+  MoreVertical,
+  Trash2,
+  Edit2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { 
@@ -43,12 +46,26 @@ const HABIT_COLORS = [
 ];
 
 export function Dashboard({ userName, onPageChange }: { userName: string, onPageChange: (page: any) => void }) {
-  const { habits, completions, toggleCompletion, calculateStreak } = useHabitData();
+  const { habits, completions, toggleCompletion, calculateStreak, reorderHabits, deleteHabit, editHabit } = useHabitData();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const [shareStreak, setShareStreak] = useState<any>(null);
   const [showAchievementsModal, setShowAchievementsModal] = useState(false);
+  const [localActiveHabits, setLocalActiveHabits] = useState<any[]>([]);
+  const [editingHabit, setEditingHabit] = useState<any>(null);
+  const [editName, setEditName] = useState('');
   
   const activeHabits = useMemo(() => habits.filter(h => !h.archived), [habits]);
+
+  useEffect(() => {
+    // Only sort by order
+    setLocalActiveHabits([...activeHabits].sort((a,b) => (a.order || 0) - (b.order || 0)));
+  }, [activeHabits]);
+
+  const handleReorder = (newOrder: any[]) => {
+    setLocalActiveHabits(newOrder);
+    reorderHabits(newOrder);
+  };
+
 
   // Gamification XP
   const totalXP = useMemo(() => calculateTotalXP(completions, habits), [completions, habits]);
@@ -95,17 +112,21 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
 
   return (
     <div className="space-y-6 md:space-y-8 pb-12 transition-colors duration-300">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-4 border-b border-slate-200 dark:border-white/5">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Good morning, {userName}</h1>
-          <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">Consistency is the key to success. 🔥</p>
+          <motion.div initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} className="flex items-center gap-2 mb-2">
+             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+             <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">AI Coach Online</span>
+          </motion.div>
+          <h1 className="text-3xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tighter mb-2">Welcome back, {userName.split(' ')[0]}</h1>
+          <p className="text-sm md:text-lg font-medium text-slate-600 dark:text-slate-400">Your habits are adapting to your life. Stay consistent without the guilt.</p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex gap-3 w-full sm:w-auto">
           <button 
             onClick={() => {
               const shareData = {
                 title: 'HabitFlow Progress',
-                text: `I've reached Level ${level} with ${totalXP} XP on HabitFlow!`,
+                text: `I'm Level ${level} with ${totalXP} XP on HabitFlow!`,
                 url: window.location.origin
               };
 
@@ -116,47 +137,48 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
                 alert('App link copied to clipboard!');
               }
             }}
-            className="btn-secondary flex-1 sm:flex-none py-2 md:py-2.5"
+            className="flex-1 sm:flex-none px-4 py-3 rounded-2xl bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 text-slate-900 dark:text-white font-bold hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-all shadow-sm active:scale-95 flex items-center justify-center gap-2"
           >
-            Share
+            <Share2 className="w-4 h-4" /> Share
           </button>
           <button 
             onClick={() => onPageChange('habits')}
-            className="btn-primary flex-1 sm:flex-none px-4 py-2 md:py-2.5"
+            className="flex-1 sm:flex-none px-6 py-3 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-500 transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.4)] active:scale-95 flex items-center justify-center gap-2"
           >
-            + Add Habit
+            <Plus className="w-5 h-5" /> New Habit
           </button>
         </div>
       </header>
 
       {/* XP System Bar */}
-      <div className="glass-card p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-indigo-500/20 dark:border-indigo-400/10">
-          <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] relative">
-                 <span className="text-[9px] text-white/70 font-bold uppercase tracking-widest leading-none mt-1">Lvl</span>
-                 <span className="text-white font-black text-2xl leading-none">{level}</span>
+      <div className="rounded-[24px] bg-slate-50 dark:bg-[#0A0A0E] border border-slate-200 dark:border-white/5 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-8 shadow-sm">
+          <div className="flex items-center gap-6">
+              <div className="w-16 h-16 rounded-[20px] bg-gradient-to-br from-indigo-500 to-purple-600 flex flex-col items-center justify-center shadow-[0_0_30px_rgba(99,102,241,0.3)] relative overflow-hidden group">
+                 <div className="absolute inset-0 bg-white/20 group-hover:translate-y-[-100%] transition-transform duration-500 rounded-[20px]" />
+                 <span className="text-[10px] text-white/80 font-black uppercase tracking-widest leading-none mt-1 z-10">Lvl</span>
+                 <span className="text-white font-black text-3xl leading-none z-10">{level}</span>
               </div>
               <div>
-                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+                 <h2 className="text-2xl font-black text-slate-900 dark:text-white flex flex-wrap items-center gap-3 tracking-tight">
                    {title}
-                   <span className="text-[10px] bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 px-2.5 py-1 rounded-full font-black uppercase tracking-widest">{totalXP} XP</span>
+                   <span className="text-[10px] bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 px-3 py-1.5 rounded-lg font-black uppercase tracking-widest">{totalXP} XP</span>
                  </h2>
-                 <p className="text-xs text-slate-500 mt-1 font-bold">Earn XP by completing habits and building streaks.</p>
+                 <p className="text-sm text-slate-500 font-semibold mt-1">Level up by protecting your streaks.</p>
               </div>
           </div>
-          <div className="w-full md:w-1/3">
-             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+          <div className="w-full md:w-[40%] bg-slate-100 dark:bg-white/[0.02] p-4 rounded-2xl border border-slate-200 dark:border-white/5">
+             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">
                  <span>Level {level}</span>
                  <span>Level {level + 1}</span>
              </div>
-             <div className="h-3 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden shadow-inner">
+             <div className="h-2 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                  <motion.div 
                      initial={{ width: 0 }}
                      animate={{ width: `${progress}%` }}
-                     className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                     className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-[0_0_15px_rgba(99,102,241,0.5)]"
                  />
              </div>
-             <p className="text-right text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest">{Math.max(0, nextLevelXP - totalXP)} XP to unlock</p>
+             <p className="text-right text-[10px] text-slate-500 mt-2 font-bold uppercase tracking-widest">{Math.max(0, nextLevelXP - totalXP)} XP to next rank</p>
           </div>
       </div>
 
@@ -180,64 +202,89 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
           trend="Based on last 7 days"
           color="text-indigo-600 dark:text-indigo-400"
         />
-        <div className="bg-indigo-600/10 border border-indigo-500/20 p-5 rounded-2xl relative overflow-hidden hidden sm:block">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative p-6 rounded-[24px] bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 overflow-hidden hidden sm:flex flex-col justify-between group shadow-sm hover:shadow-xl transition-all duration-500"
+        >
+          <div className="absolute inset-0 bg-white/[0.01] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <div className="relative z-10">
-            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase mb-2">AI Coach Tip</p>
-            <p className="text-sm text-slate-800 dark:text-slate-200 italic leading-relaxed">"Habits are the compound interest of self-improvement."</p>
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-4 h-4 text-indigo-500" />
+              <p className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">AI Coach Tip</p>
+            </div>
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed max-w-[200px]">"Habits are the compound interest of self-improvement. Focus on the 1%."</p>
           </div>
-          <div className="absolute -right-4 -bottom-4 opacity-10">
-            <Sparkles className="w-20 h-20 text-indigo-600 dark:text-indigo-400" />
+          <div className="absolute -right-8 -bottom-8 opacity-10 group-hover:opacity-20 group-hover:rotate-12 group-hover:scale-110 transition-all duration-700 pointer-events-none">
+            <Sparkles className="w-32 h-32 text-indigo-500" />
           </div>
-        </div>
+        </motion.div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
         {/* Today's Habits Checklist */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="glass-card flex flex-col overflow-hidden">
-            <div className="p-5 md:p-6 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/[0.02]">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Today's Checklist</h3>
-              <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest bg-slate-200 dark:bg-white/5 px-2 py-1 rounded">
+          <div className="rounded-[24px] bg-slate-50 dark:bg-[#0A0A0E] border border-slate-200 dark:border-white/5 flex flex-col overflow-hidden shadow-sm">
+            <div className="p-6 md:p-8 border-b border-slate-200 dark:border-white/5 flex justify-between items-center bg-white dark:bg-[#0A0A0E]/50">
+              <div>
+                 <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Today's Focus</h3>
+                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-widest mt-1">Consistency Over Intensity</p>
+              </div>
+              <span className="text-[10px] text-indigo-600 dark:text-indigo-400 uppercase font-black tracking-widest bg-indigo-500/10 dark:bg-indigo-500/20 px-3 py-1.5 rounded-lg">
                 {format(new Date(), 'MMM dd')}
               </span>
             </div>
-            <div className="p-4 md:p-6 space-y-3">
-              {activeHabits.length === 0 ? (
-                <div className="py-12 text-center text-slate-500">
-                  <p>No habits scheduled for today.</p>
+            <div className="p-6 md:p-8 space-y-4">
+              {localActiveHabits.length === 0 ? (
+                <div className="py-16 text-center text-slate-500">
+                  <div className="w-16 h-16 bg-slate-100 dark:bg-white/5 rounded-2xl mx-auto flex items-center justify-center mb-4">
+                    <Activity className="w-8 h-8 text-slate-400" />
+                  </div>
+                  <p className="font-bold">No active habits.</p>
                   <button 
                     onClick={() => onPageChange('habits')}
-                    className="mt-4 text-indigo-400 font-bold hover:underline"
+                    className="mt-4 text-indigo-500 font-bold hover:text-indigo-600 transition-colors uppercase tracking-widest text-xs"
                   >
-                    Create one now
+                    Start tracking now
                   </button>
                 </div>
-              ) : activeHabits.map(habit => {
-                const comp = completions.find(c => c.habitId === habit.id && c.date === todayStr);
-                const habitColor = HABIT_COLORS.find(c => c.value === habit.color);
-                return (
-                  <HabitItem 
-                    key={habit.id}
-                    name={habit.name} 
-                    desc={habit.category} 
-                    colorClass={habitColor?.bg || "bg-indigo-600 dark:bg-indigo-500"}
-                    completed={!!comp?.completed} 
-                    onToggle={() => toggleCompletion(habit.id, todayStr)}
-                  />
-                );
-              })}
+              ) : (
+                <Reorder.Group axis="y" values={localActiveHabits} onReorder={handleReorder} className="space-y-4">
+                  {localActiveHabits.map(habit => {
+                    const comp = completions.find(c => c.habitId === habit.id && c.date === todayStr);
+                    const habitColor = HABIT_COLORS.find(c => c.value === habit.color);
+                    return (
+                      <Reorder.Item key={habit.id} value={habit}>
+                        <HabitItem 
+                          name={habit.name} 
+                          desc={habit.category} 
+                          colorClass={habitColor?.text || "text-indigo-500"}
+                          completed={!!comp?.completed} 
+                          onToggle={() => toggleCompletion(habit.id, todayStr)}
+                          onDelete={() => deleteHabit(habit.id)}
+                          onEdit={() => {
+                            setEditingHabit(habit);
+                            setEditName(habit.name);
+                          }}
+                        />
+                      </Reorder.Item>
+                    );
+                  })}
+                </Reorder.Group>
+              )}
             </div>
           </div>
 
           {/* Achievement Row */}
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6 pt-4">
             <div className="flex items-center justify-between">
-               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Achievements</h3>
+               <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Recent Unlocks</h3>
                <button 
                  onClick={() => setShowAchievementsModal(true)}
-                 className="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest flex items-center gap-1"
+                 className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest flex items-center gap-1 group"
                >
-                 View All Board <ChevronRight className="w-4 h-4" />
+                 View Collection <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                </button>
             </div>
             
@@ -248,15 +295,19 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     key={idx} 
-                    className={cn("flex flex-col items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-white/5 transition-all text-center", ach.bg)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-3 p-6 rounded-[24px] border border-slate-200 dark:border-white/5 transition-all text-center relative overflow-hidden group shadow-sm hover:shadow-xl", 
+                      ach.bg
+                    )}
                   >
-                    <ach.icon className={cn("w-6 h-6", ach.color)} />
+                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.05] transition-colors duration-500 pointer-events-none" />
+                    <ach.icon className={cn("w-8 h-8 group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500", ach.color)} />
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white">{ach.label}</span>
                   </motion.div>
                 ))}
               </div>
             ) : (
-              <div className="glass-card p-6 text-center text-slate-500 text-sm font-bold border-dashed">
+              <div className="rounded-[24px] p-6 text-center text-slate-500 text-sm font-bold border border-dashed border-slate-300 dark:border-white/10">
                 Keep tracking habits to unlock achievements.
               </div>
             )}
@@ -265,9 +316,9 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
 
         {/* Side Progress Widgets */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="glass-card p-5 md:p-6">
-            <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 tracking-wider uppercase text-[10px]">Weekly Progress</h4>
-            <div className="flex items-end justify-between h-32 gap-1.5 md:gap-2">
+          <div className="rounded-[24px] bg-slate-50 dark:bg-[#0A0A0E] border border-slate-200 dark:border-white/5 p-6 shadow-sm">
+            <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 tracking-[0.2em] uppercase">Weekly Progress</h4>
+            <div className="flex items-end justify-between h-32 gap-2">
               {[...Array(7)].map((_, i) => {
                 const day = subDays(new Date(), 6 - i);
                 const dayStr = format(day, 'yyyy-MM-dd');
@@ -277,22 +328,28 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
                 return (
                   <div 
                     key={i} 
-                    className={cn(
-                      "flex-1 bg-indigo-500/20 rounded-t transition-all",
-                      i === 6 ? "bg-slate-200 dark:bg-white/10 border-t-2 border-indigo-500" : "hover:bg-indigo-500/40"
-                    )}
-                    style={{ height: `${Math.max(5, dailyRate)}%` }}
-                  ></div>
+                    className="flex-1 flex flex-col justify-end group"
+                  >
+                    <div 
+                      className={cn(
+                        "w-full rounded-t-xl transition-all duration-500 relative",
+                        i === 6 ? "bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]" : "bg-indigo-500/20 group-hover:bg-indigo-500/40"
+                      )}
+                      style={{ height: `${Math.max(8, dailyRate)}%` }}
+                    >
+                      {i === 6 && <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-indigo-300" />}
+                    </div>
+                  </div>
                 );
               })}
             </div>
-            <div className="flex justify-between mt-3 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span className="text-indigo-400">S</span>
+            <div className="flex justify-between mt-4 text-[9px] text-slate-500 font-bold uppercase tracking-widest border-t border-slate-200 dark:border-white/5 pt-4">
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span className="text-indigo-500">S</span>
             </div>
           </div>
 
-          <div className="glass-card p-5 md:p-6">
-            <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-4 tracking-wider uppercase text-[10px]">Top Streaks</h4>
+          <div className="rounded-[24px] bg-slate-50 dark:bg-[#0A0A0E] border border-slate-200 dark:border-white/5 p-6 shadow-sm">
+            <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-6 tracking-[0.2em] uppercase">Top Streaks</h4>
             <div className="space-y-4">
               {streaks.sort((a,b) => b.streak - a.streak).slice(0, 3).map(s => {
                   const habitColor = HABIT_COLORS.find(c => c.value === s.color);
@@ -322,14 +379,14 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
             </div>
           </div>
 
-          <div className="glass-card p-6 overflow-hidden">
-            <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400">Contribution Heatmap</h4>
-              <span className="text-[10px] text-slate-400 dark:text-slate-600">Last 15 weeks</span>
+          <div className="rounded-[24px] bg-slate-50 dark:bg-[#0A0A0E] border border-slate-200 dark:border-white/5 p-6 shadow-sm overflow-hidden">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 tracking-[0.2em] uppercase">Contribution</h4>
+              <span className="text-[10px] text-slate-400 dark:text-slate-600 font-bold uppercase tracking-widest">Last 15 weeks</span>
             </div>
             
-            <div className="overflow-x-auto pb-2 scrollbar-hide">
-              <div className="grid grid-flow-col grid-rows-7 gap-1.5 min-w-max">
+            <div className="overflow-x-auto pb-4 scrollbar-hide">
+              <div className="grid grid-flow-col grid-rows-7 gap-2 min-w-max">
                 {Array.from({ length: 105 }).map((_, i) => {
                   const day = subDays(new Date(), 104 - i);
                   const dayStr = format(day, 'yyyy-MM-dd');
@@ -339,29 +396,29 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
                   let bgClass = "bg-slate-200 dark:bg-white/[0.03]";
                   if (count > 0) bgClass = "bg-indigo-300 dark:bg-indigo-500/40";
                   if (count > 2) bgClass = "bg-indigo-400 dark:bg-indigo-500/60";
-                  if (count > 4) bgClass = "bg-indigo-500 dark:bg-indigo-500/80";
-                  if (count > 6) bgClass = "bg-indigo-600 dark:bg-indigo-500";
+                  if (count > 4) bgClass = "bg-indigo-500 dark:bg-indigo-500/80 shadow-[0_0_8px_rgba(99,102,241,0.4)]";
+                  if (count > 6) bgClass = "bg-indigo-600 dark:bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.6)]";
 
                   return (
                     <div 
                       key={i} 
                       title={`${format(day, 'MMM do, yyyy')}: ${count} habits`}
                       className={cn(
-                        "w-3 h-3 md:w-3.5 md:h-3.5 rounded-[2px] transition-all duration-300",
+                        "w-4 h-4 rounded-sm transition-all duration-300 hover:scale-125 cursor-pointer",
                         bgClass
                       )}
                     ></div>
                   );
                 })}
               </div>
-              <div className="flex justify-between items-center mt-3 text-[10px] font-bold text-slate-400">
+              <div className="flex justify-between items-center mt-6 text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                 <span>Less</span>
-                <div className="flex gap-1">
-                  <div className="w-2.5 h-2.5 rounded-[2px] bg-slate-200 dark:bg-white/[0.03]"></div>
-                  <div className="w-2.5 h-2.5 rounded-[2px] bg-indigo-300 dark:bg-indigo-500/40"></div>
-                  <div className="w-2.5 h-2.5 rounded-[2px] bg-indigo-400 dark:bg-indigo-500/60"></div>
-                  <div className="w-2.5 h-2.5 rounded-[2px] bg-indigo-500 dark:bg-indigo-500/80"></div>
-                  <div className="w-2.5 h-2.5 rounded-[2px] bg-indigo-600 dark:bg-indigo-500"></div>
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-sm bg-slate-200 dark:bg-white/[0.03]"></div>
+                  <div className="w-3 h-3 rounded-sm bg-indigo-300 dark:bg-indigo-500/40"></div>
+                  <div className="w-3 h-3 rounded-sm bg-indigo-400 dark:bg-indigo-500/60"></div>
+                  <div className="w-3 h-3 rounded-sm bg-indigo-500 dark:bg-indigo-500/80"></div>
+                  <div className="w-3 h-3 rounded-sm bg-indigo-600 dark:bg-indigo-500"></div>
                 </div>
                 <span>More</span>
               </div>
@@ -389,33 +446,153 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
           perfectDayUnlocked: activeHabits.length > 0 && completions.filter(c => c.date === todayStr && c.completed && activeHabits.some(h => h.id === c.habitId)).length === activeHabits.length
         }}
       />
+
+      <AnimatePresence>
+        {editingHabit && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setEditingHabit(null)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm glass-card p-6 shadow-2xl border-slate-200 dark:border-white/10"
+            >
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-widest uppercase mb-4">Edit Habit</h2>
+              <input 
+                autoFocus
+                type="text" 
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="New name..."
+                className="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 outline-none focus:border-indigo-500 transition-all font-medium mb-6"
+              />
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setEditingHabit(null)}
+                  className="flex-1 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    if (editName.trim()) {
+                      editHabit(editingHabit.id, { name: editName.trim() });
+                    }
+                    setEditingHabit(null);
+                  }}
+                  className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-indigo-600/20"
+                >
+                  Save
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function HabitItem({ name, desc, colorClass, completed, onToggle }: { name: string, desc: string, colorClass: string, completed: boolean, onToggle: () => void }) {
+function HabitItem({ name, desc, colorClass, completed, onToggle, onDelete, onEdit }: { name: string, desc: string, colorClass: string, completed: boolean, onToggle: () => void, onDelete?: () => void, onEdit?: () => void }) {
+  // Extracting from colorClass something we can use for glows. 
+  // Let's assume colorClass has text-indigo-500 or bg-indigo-500. We will map to standard Tailwind colors.
+  const isDark = true; // Dashboard is usually used in dark mode for this premium feel
+  
   return (
-    <div className={cn(
-      "flex items-center justify-between gap-3 p-[10px_12px] bg-slate-100/50 dark:bg-white/[0.03] rounded-xl border border-slate-200 dark:border-white/5 group hover:border-indigo-500/50 transition-all duration-300",
-      completed && "bg-slate-200/50 dark:bg-white/[0.01]"
-    )}>
-      <div className={cn("w-2 h-2 rounded-full flex-shrink-0", colorClass)} />
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ scale: 1.01 }}
+      className={cn(
+        "relative flex items-center justify-between gap-4 p-4 md:p-5 rounded-2xl border transition-all duration-500 group overflow-hidden cursor-grab active:cursor-grabbing",
+        completed 
+          ? "bg-slate-100/30 dark:bg-white/[0.01] border-transparent" 
+          : "bg-white dark:bg-[#0A0A0E] border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 shadow-sm hover:shadow-md"
+      )}
+    >
+      {/* Glow Effect behind the card on hover */}
+      {!completed && (
+        <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500 pointer-events-none", colorClass)} />
+      )}
       
-      <div className="flex-1 ml-[10px] min-w-0">
-        <p className={cn("font-bold text-slate-900 dark:text-white truncate uppercase tracking-tight", completed && "line-through text-slate-400 dark:text-slate-500")}>{name}</p>
-        {desc && <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest truncate">{desc}</p>}
+      <div className="flex items-center gap-4 min-w-0 flex-1">
+        {/* State Indicator */}
+        <div className="relative flex-shrink-0">
+          <div className={cn("w-3 h-3 rounded-full transition-all duration-300", colorClass, completed && "scale-50 opacity-40")} />
+          {!completed && (
+            <div className={cn("absolute inset-0 rounded-full animate-ping opacity-40", colorClass)} />
+          )}
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <p className={cn(
+            "font-bold text-base md:text-lg tracking-tight transition-colors duration-300 truncate",
+            completed ? "text-slate-400 dark:text-slate-500 line-through decoration-slate-300 dark:decoration-slate-600" : "text-slate-900 dark:text-white"
+          )}>
+            {name}
+          </p>
+          {desc && (
+            <p className={cn(
+              "text-xs font-semibold uppercase tracking-widest mt-1 truncate transition-colors duration-300",
+              completed ? "text-slate-400/50 dark:text-slate-500/50" : "text-slate-500 dark:text-slate-400"
+            )}>
+              {desc}
+            </p>
+          )}
+        </div>
       </div>
 
-      <button 
-        onClick={onToggle}
-        className={cn(
-          "w-10 h-10 flex-shrink-0 rounded-xl border flex items-center justify-center cursor-pointer transition-all active:scale-90",
-          completed ? `${colorClass} border-transparent text-white shadow-lg` : "bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-transparent"
+      <div className="flex items-center gap-2">
+        {onEdit && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all"
+            title="Edit Habit"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
         )}
-      >
-        <CheckCircle2 className="w-5 h-5" strokeWidth={3} />
-      </button>
-    </div>
+        {onDelete && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+            title="Delete Habit"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
+        <button 
+          onClick={(e) => { e.stopPropagation(); onToggle(); }}
+          className={cn(
+            "relative w-12 h-12 flex-shrink-0 rounded-2xl flex items-center justify-center cursor-pointer transition-all duration-500 active:scale-90 overflow-hidden",
+            completed 
+              ? `${colorClass} shadow-lg shadow-current/20` 
+              : "bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-white/[0.08]"
+          )}
+        >
+          <CheckCircle2 className={cn("w-6 h-6 transition-all duration-500", completed ? "text-white scale-100" : "text-transparent scale-50 group-hover:scale-75 group-hover:text-slate-300 dark:group-hover:text-slate-600")} strokeWidth={completed ? 3 : 2} />
+          
+          {/* Subtle burst effect when completed */}
+          <AnimatePresence>
+            {completed && (
+              <motion.div
+                initial={{ scale: 0, opacity: 1 }}
+                animate={{ scale: 2, opacity: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className={cn("absolute inset-0 rounded-full", colorClass)}
+              />
+            )}
+          </AnimatePresence>
+        </button>
+      </div>
+    </motion.div>
   );
 }
 
@@ -424,11 +601,16 @@ function StatCard({ label, value, trend, color }: any) {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card p-5 group hover:translate-y-[-4px] transition-all duration-300"
+      className="relative p-6 rounded-[24px] bg-slate-50 dark:bg-[#0A0A0E] border border-slate-200 dark:border-white/5 hover:border-slate-300 dark:hover:border-white/10 transition-all duration-500 overflow-hidden group shadow-sm hover:shadow-xl"
     >
-      <p className="text-xs font-bold text-slate-600 dark:text-slate-500 uppercase mb-3 tracking-widest">{label}</p>
-      <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{value}</p>
-      <p className={cn("text-xs mt-1 font-bold", color)}>{trend}</p>
+      <div className={cn("absolute inset-0 opacity-0 group-hover:opacity-[0.02] dark:group-hover:opacity-[0.03] transition-opacity duration-500 pointer-events-none", color.split(' ')[0].replace('text-', 'bg-'))} />
+      <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">{label}</p>
+        <div>
+          <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter mb-1">{value}</p>
+          <p className={cn("text-xs font-bold", color)}>{trend}</p>
+        </div>
+      </div>
     </motion.div>
   );
 }

@@ -210,5 +210,29 @@ export function useHabitData() {
     }
   };
 
-  return { habits, completions, loading, addHabit, toggleCompletion, calculateStreak, deleteHabit, toggleArchive };
+  const reorderHabits = async (newHabitsOrder: Habit[]) => {
+    if (!auth.currentUser) return;
+    const batch = writeBatch(db);
+    newHabitsOrder.forEach((habit, index) => {
+      const habitRef = doc(db, 'habits', habit.id);
+      batch.update(habitRef, { order: index });
+    });
+    try {
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'habits');
+    }
+  };
+
+  const editHabit = async (habitId: string, updates: Partial<Habit>) => {
+    if (!auth.currentUser) return;
+    const path = 'habits';
+    try {
+      await updateDoc(doc(db, path, habitId), updates);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, path);
+    }
+  };
+
+  return { habits, completions, loading, addHabit, toggleCompletion, calculateStreak, deleteHabit, toggleArchive, reorderHabits, editHabit };
 }

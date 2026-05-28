@@ -6,6 +6,7 @@ import { Page } from './components/layout/Sidebar';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import { OnboardingTutorial } from './components/OnboardingTutorial';
+import { AnimatePresence } from 'motion/react';
 
 // Pages
 import { Dashboard } from './pages/Dashboard';
@@ -84,9 +85,11 @@ export default function App() {
         {renderPage()}
       </MainLayout>
 
-      {profile && profile.hasCompletedOnboarding === false && (
-        <OnboardingTutorial onComplete={completeOnboarding} />
-      )}
+      <AnimatePresence>
+        {profile && profile.hasCompletedOnboarding === false && (
+          <OnboardingTutorial onComplete={completeOnboarding} />
+        )}
+      </AnimatePresence>
     </>
   );
 }

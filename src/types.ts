@@ -19,6 +19,7 @@ export interface Habit {
   reminderTime?: string; // HH:mm
   reminderDays?: number[]; // [0-6] for weekly or specific days
   archived?: boolean;
+  order?: number;
   createdAt: any;
 }
 
