@@ -11,6 +11,12 @@ export interface UserProfile {
     shareAnalytics?: boolean;
     personalizedCoach?: boolean;
   };
+  wearables?: {
+    fitbit?: { connected: boolean; lastSync?: number };
+    appleHealth?: { connected: boolean; lastSync?: number };
+    oura?: { connected: boolean; lastSync?: number };
+    googleFit?: { connected: boolean; lastSync?: number };
+  };
 }
 
 export interface Habit {

@@ -15,7 +15,11 @@ import {
     ChevronRight,
     Trash2,
     LogOut,
-    X
+    X,
+    Watch,
+    ActivitySquare,
+    HeartPulse,
+    Activity
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { auth, db } from '../firebase/config';
@@ -27,10 +31,13 @@ import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
 
 export function Settings() {
-  const { user, profile, updatePrivacyPreferences } = useAuth();
+  const { user, profile, updatePrivacyPreferences, updateWearableIntegration } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+  const [isWearablesModalOpen, setIsWearablesModalOpen] = useState(false);
+  const [connectingWearable, setConnectingWearable] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [isGeneratingPrint, setIsGeneratingPrint] = useState(false);
 
@@ -40,6 +47,19 @@ export function Settings() {
     } catch (error) {
       console.error('Logout failed', error);
     }
+  };
+
+  const handleToggleWearable = async (provider: string, currentlyConnected: boolean) => {
+    if (currentlyConnected) {
+      await updateWearableIntegration(provider, false);
+      return;
+    }
+    setConnectingWearable(provider);
+    // Simulate OAuth redirect and connection delay
+    setTimeout(async () => {
+      await updateWearableIntegration(provider, true);
+      setConnectingWearable(null);
+    }, 1500);
   };
 
   const handleExportData = async () => {
@@ -253,7 +273,17 @@ export function Settings() {
                 checked={theme === 'dark'} 
                 onToggle={toggleTheme} 
             />
-            <SettingItem icon={Smartphone} title="Mobile Integration" description="Connect your wearable devices" />
+            <SettingItem 
+                icon={Smartphone} 
+                title="Mobile Integration" 
+                description="Connect your wearable devices" 
+                onClick={() => setIsWearablesModalOpen(true)} 
+                rightContent={
+                    Object.values(profile?.wearables || {}).some((w: any) => w.connected) && (
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] mr-2" />
+                    )
+                }
+            />
         </SettingSection>
 
         <SettingSection title="Privacy & Security">
@@ -322,7 +352,10 @@ export function Settings() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    onClick={() => setIsDeleteModalOpen(false)}
+                    onClick={() => {
+                        setIsDeleteModalOpen(false);
+                        setDeleteConfirmText("");
+                    }}
                     className="absolute inset-0 bg-black/90 backdrop-blur-md"
                 />
                 <motion.div 
@@ -335,17 +368,32 @@ export function Settings() {
                         <AlertCircle className="w-8 h-8" />
                     </div>
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white text-center mb-2">Are you sure?</h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-center mb-8">This action is permanent and cannot be undone. All your habits, progress, and goals will be lost forever.</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-center mb-6">This action is permanent and cannot be undone. All your habits, progress, and goals will be lost forever.</p>
                     
+                    <div className="mb-8">
+                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 text-center">Type 'DELETE' to confirm</label>
+                        <input 
+                            type="text" 
+                            value={deleteConfirmText}
+                            onChange={(e) => setDeleteConfirmText(e.target.value)}
+                            className="w-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-center text-slate-900 dark:text-white placeholder:text-slate-400 font-bold tracking-widest outline-none focus:border-red-500 transition-all uppercase"
+                            placeholder="DELETE"
+                        />
+                    </div>
+
                     <div className="flex flex-col gap-3">
                         <button 
                             onClick={handleDeleteAccount}
-                            className="w-full py-4 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all"
+                            disabled={deleteConfirmText !== 'DELETE'}
+                            className="w-full py-4 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black uppercase tracking-widest text-xs rounded-2xl transition-all"
                         >
                             Confirm Deletion
                         </button>
                         <button 
-                            onClick={() => setIsDeleteModalOpen(false)}
+                            onClick={() => {
+                                setIsDeleteModalOpen(false);
+                                setDeleteConfirmText("");
+                            }}
                             className="w-full py-4 btn-secondary font-black uppercase tracking-widest text-xs rounded-2xl"
                         >
                             Nevermind
@@ -420,8 +468,126 @@ export function Settings() {
             </div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {isWearablesModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsWearablesModalOpen(false)}
+                    className="absolute inset-0 bg-black/50 backdrop-blur-md"
+                />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="relative w-full max-w-md glass-card overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                >
+                    <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white/50 dark:bg-black/50 backdrop-blur-md z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                <Watch className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Wearables</h2>
+                        </div>
+                        <button 
+                            onClick={() => setIsWearablesModalOpen(false)}
+                            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                    
+                    <div className="p-6 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 space-y-6">
+                        <div className="pb-4">
+                           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Automatically sync your activity and sleep data from popular devices to complete habits seamlessly.</p>
+                           
+                           <div className="space-y-4">
+                               <WearableProviderItem 
+                                   icon={HeartPulse} 
+                                   colorClass="text-emerald-500 bg-emerald-500/10 border-emerald-500/20"
+                                   title="Fitbit" 
+                                   description="Sync steps, sleep & active minutes" 
+                                   connected={!!profile?.wearables?.fitbit?.connected} 
+                                   isLoading={connectingWearable === 'fitbit'}
+                                   onToggle={() => handleToggleWearable('fitbit', !!profile?.wearables?.fitbit?.connected)} 
+                               />
+                               
+                               <WearableProviderItem 
+                                   icon={ActivitySquare} 
+                                   colorClass="text-rose-500 bg-rose-500/10 border-rose-500/20"
+                                   title="Apple Health" 
+                                   description="Sync activity circles & workouts" 
+                                   connected={!!profile?.wearables?.appleHealth?.connected} 
+                                   isLoading={connectingWearable === 'appleHealth'}
+                                   onToggle={() => handleToggleWearable('appleHealth', !!profile?.wearables?.appleHealth?.connected)} 
+                               />
+                               
+                               <WearableProviderItem 
+                                   icon={Moon} 
+                                   colorClass="text-indigo-500 bg-indigo-500/10 border-indigo-500/20"
+                                   title="Oura Ring" 
+                                   description="Sync readiness & sleep scores" 
+                                   connected={!!profile?.wearables?.oura?.connected} 
+                                   isLoading={connectingWearable === 'oura'}
+                                   onToggle={() => handleToggleWearable('oura', !!profile?.wearables?.oura?.connected)} 
+                               />
+
+                               <WearableProviderItem 
+                                   icon={Activity} 
+                                   colorClass="text-blue-500 bg-blue-500/10 border-blue-500/20"
+                                   title="Google Fit" 
+                                   description="Sync heart points & activity" 
+                                   connected={!!profile?.wearables?.googleFit?.connected} 
+                                   isLoading={connectingWearable === 'googleFit'}
+                                   onToggle={() => handleToggleWearable('googleFit', !!profile?.wearables?.googleFit?.connected)} 
+                               />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
     </div>
   );
+}
+
+function WearableProviderItem({ icon: Icon, title, description, colorClass, connected, isLoading, onToggle }: any) {
+    return (
+        <div className="w-full flex items-center justify-between p-4 border border-slate-200 dark:border-white/10 rounded-2xl bg-slate-50/50 dark:bg-white/[0.02]">
+            <div className="flex items-center gap-4">
+                <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center border", colorClass)}>
+                    <Icon className="w-6 h-6" />
+                </div>
+                <div>
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        {title}
+                        {connected && <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] uppercase font-black tracking-wider">Connected</span>}
+                    </h4>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
+                </div>
+            </div>
+            <button 
+                onClick={onToggle}
+                disabled={isLoading}
+                className={cn(
+                    "px-4 py-2 rounded-xl text-xs font-bold transition-all disabled:opacity-50",
+                    connected 
+                        ? "bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-white/20" 
+                        : "bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg shadow-indigo-500/20"
+                )}
+            >
+                {isLoading ? (
+                    <span className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 animate-spin hidden sm:block" /> Connecting...
+                    </span>
+                ) : connected ? 'Disconnect' : 'Connect'}
+            </button>
+        </div>
+    );
 }
 
 function SettingSection({ title, children }: { title: string, children: React.ReactNode }) {
@@ -435,7 +601,7 @@ function SettingSection({ title, children }: { title: string, children: React.Re
     )
 }
 
-function SettingItem({ icon: Icon, title, description, onClick }: any) {
+function SettingItem({ icon: Icon, title, description, onClick, rightContent }: any) {
     return (
         <button onClick={onClick} className="w-full flex items-center justify-between p-6 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors text-left group">
             <div className="flex items-center gap-4">
@@ -447,7 +613,10 @@ function SettingItem({ icon: Icon, title, description, onClick }: any) {
                    <p className="text-xs text-slate-500">{description}</p>
                 </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-700 group-hover:text-indigo-600 dark:group-hover:text-white transition-all transform group-hover:translate-x-1" />
+            <div className="flex items-center gap-2">
+                {rightContent}
+                <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-700 group-hover:text-indigo-600 dark:group-hover:text-white transition-all transform group-hover:translate-x-1" />
+            </div>
         </button>
     )
 }

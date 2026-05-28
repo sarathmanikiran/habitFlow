@@ -80,5 +80,18 @@ export function useAuth() {
     setProfile(prev => prev ? { ...prev, privacyPreferences: preferences } : null);
   };
 
-  return { user, profile, loading, completeOnboarding, updatePrivacyPreferences };
+  const updateWearableIntegration = async (provider: string, connected: boolean) => {
+    if (!user) return;
+    const profileRef = doc(db, 'users', user.uid);
+    const updatedWearables = {
+      ...(profile?.wearables || {}),
+      [provider]: { connected, lastSync: connected ? Date.now() : undefined }
+    };
+    await updateDoc(profileRef, {
+      wearables: updatedWearables
+    });
+    setProfile(prev => prev ? { ...prev, wearables: updatedWearables } : null);
+  };
+
+  return { user, profile, loading, completeOnboarding, updatePrivacyPreferences, updateWearableIntegration };
 }
