@@ -46,13 +46,59 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   console.error('Firestore Error: ', JSON.stringify(errInfo));
 }
 
+function getInitialDemoHabits(): Habit[] {
+  return [
+    {
+      id: 'habit_demo_1',
+      userId: 'demo_user',
+      name: 'Morning Gym or Home Workout',
+      category: 'Health',
+      color: 'emerald',
+      frequency: 'daily',
+      createdAt: new Date().toISOString(),
+      archived: false
+    },
+    {
+      id: 'habit_demo_2',
+      userId: 'demo_user',
+      name: 'Read 10 pages or Listen to Audiobook',
+      category: 'Mind',
+      color: 'indigo',
+      frequency: 'daily',
+      createdAt: new Date().toISOString(),
+      archived: false
+    },
+    {
+      id: 'habit_demo_3',
+      userId: 'demo_user',
+      name: 'Plan the upcoming daily tasks',
+      category: 'Productivity',
+      color: 'pink',
+      frequency: 'daily',
+      createdAt: new Date().toISOString(),
+      archived: false
+    }
+  ];
+}
+
 export function useHabitData() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [completions, setCompletions] = useState<Completion[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isDemo = auth.currentUser?.uid === 'demo_user';
+
   useEffect(() => {
     if (!auth.currentUser) return;
+
+    if (isDemo) {
+      const localHabits = localStorage.getItem('demo_habits');
+      const localCompletions = localStorage.getItem('demo_completions');
+      setHabits(localHabits ? JSON.parse(localHabits) : getInitialDemoHabits());
+      setCompletions(localCompletions ? JSON.parse(localCompletions) : []);
+      setLoading(false);
+      return;
+    }
 
     const habitsPath = 'habits';
     const habitsQuery = query(
@@ -85,7 +131,7 @@ export function useHabitData() {
       unsubHabits();
       unsubCompletions();
     };
-  }, []);
+  }, [isDemo]);
 
   const addHabit = async (
     name: string, 
@@ -96,6 +142,26 @@ export function useHabitData() {
     reminderDays?: number[]
   ) => {
     if (!auth.currentUser) return;
+
+    if (isDemo) {
+      const newHabit: Habit = {
+        id: 'habit_' + Date.now().toString(),
+        userId: auth.currentUser.uid,
+        name,
+        category: category as any,
+        color,
+        frequency,
+        createdAt: new Date().toISOString(),
+        archived: false,
+        ...(reminderTime !== undefined && { reminderTime }),
+        ...(reminderDays !== undefined && { reminderDays })
+      };
+      const updated = [newHabit, ...habits];
+      setHabits(updated);
+      localStorage.setItem('demo_habits', JSON.stringify(updated));
+      return;
+    }
+
     const path = 'habits';
     try {
       const data: any = {
@@ -115,18 +181,45 @@ export function useHabitData() {
     }
   };
 
-  const toggleCompletion = async (habitId: string, date: string) => {
-    if (!auth.currentUser) return;
+  const toggleCompletion = async (habitId: string, date: string): Promise<'completed' | 'none'> => {
+    if (!auth.currentUser) return 'none';
+
+    if (isDemo) {
+      const existingIndex = completions.findIndex(c => c.habitId === habitId && c.date === date);
+      let updatedCompletions = [...completions];
+      let newStatus: 'completed' | 'none' = 'none';
+      
+      if (existingIndex > -1) {
+        // If it exists, we remove it completely to unachieve it back to 'none'
+        updatedCompletions.splice(existingIndex, 1);
+        newStatus = 'none';
+      } else {
+        // Create new completion
+        const newCompletion: Completion = {
+          id: 'completion_' + Date.now().toString(),
+          habitId,
+          userId: auth.currentUser.uid,
+          date,
+          completed: true,
+          updatedAt: new Date().toISOString()
+        };
+        updatedCompletions.push(newCompletion);
+        newStatus = 'completed';
+      }
+      
+      setCompletions(updatedCompletions);
+      localStorage.setItem('demo_completions', JSON.stringify(updatedCompletions));
+      return newStatus;
+    }
     
     const existing = completions.find(c => c.habitId === habitId && c.date === date);
     const path = 'completions';
     
     try {
       if (existing) {
-        await updateDoc(doc(db, path, existing.id), {
-          completed: !existing.completed,
-          updatedAt: serverTimestamp()
-        });
+        // If it existing completion, delete it to fully unachieve it back to 'none'
+        await deleteDoc(doc(db, path, existing.id));
+        return 'none';
       } else {
         await addDoc(collection(db, path), {
           habitId,
@@ -135,10 +228,12 @@ export function useHabitData() {
           completed: true,
           updatedAt: serverTimestamp()
         });
+        return 'completed';
       }
     } catch (error) {
-      const op = existing ? OperationType.UPDATE : OperationType.CREATE;
+      const op = existing ? OperationType.DELETE : OperationType.CREATE;
       handleFirestoreError(error, op, path);
+      return 'none';
     }
   };
 
@@ -150,7 +245,6 @@ export function useHabitData() {
     if (habitCompletions.length === 0) return 0;
 
     let streak = 0;
-    let checkDate = new Date(); // Start from today
     
     // If not completed today, check if completed yesterday to continue streak
     const todayStr = format(new Date(), 'yyyy-MM-dd');
@@ -178,6 +272,14 @@ export function useHabitData() {
 
   const toggleArchive = async (habitId: string) => {
     if (!auth.currentUser) return;
+
+    if (isDemo) {
+      const updated = habits.map(h => h.id === habitId ? { ...h, archived: !h.archived } : h);
+      setHabits(updated);
+      localStorage.setItem('demo_habits', JSON.stringify(updated));
+      return;
+    }
+
     const path = 'habits';
     const habit = habits.find(h => h.id === habitId);
     if (!habit) return;
@@ -192,6 +294,17 @@ export function useHabitData() {
 
   const deleteHabit = async (habitId: string) => {
     if (!auth.currentUser) return;
+
+    if (isDemo) {
+      const updatedHabits = habits.filter(h => h.id !== habitId);
+      const updatedCompletions = completions.filter(c => c.habitId !== habitId);
+      setHabits(updatedHabits);
+      setCompletions(updatedCompletions);
+      localStorage.setItem('demo_habits', JSON.stringify(updatedHabits));
+      localStorage.setItem('demo_completions', JSON.stringify(updatedCompletions));
+      return;
+    }
+
     const path = 'habits';
     try {
       // 1. Delete the habit
@@ -212,6 +325,14 @@ export function useHabitData() {
 
   const reorderHabits = async (newHabitsOrder: Habit[]) => {
     if (!auth.currentUser) return;
+
+    if (isDemo) {
+      const updated = newHabitsOrder.map((habit, index) => ({ ...habit, order: index }));
+      setHabits(updated);
+      localStorage.setItem('demo_habits', JSON.stringify(updated));
+      return;
+    }
+
     const batch = writeBatch(db);
     newHabitsOrder.forEach((habit, index) => {
       const habitRef = doc(db, 'habits', habit.id);
@@ -226,6 +347,14 @@ export function useHabitData() {
 
   const editHabit = async (habitId: string, updates: Partial<Habit>) => {
     if (!auth.currentUser) return;
+
+    if (isDemo) {
+      const updated = habits.map(h => h.id === habitId ? { ...h, ...updates } : h);
+      setHabits(updated);
+      localStorage.setItem('demo_habits', JSON.stringify(updated));
+      return;
+    }
+
     const path = 'habits';
     try {
       await updateDoc(doc(db, path, habitId), updates);

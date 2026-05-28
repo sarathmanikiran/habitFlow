@@ -21,20 +21,33 @@ import { cn } from '../lib/utils';
 
 interface LoginProps {
   onLogin: () => Promise<void> | void;
+  onDemoLogin: () => void;
 }
 
-export function Login({ onLogin }: LoginProps) {
+export function Login({ onLogin, onDemoLogin }: LoginProps) {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLoginClick = async () => {
     setIsLoggingIn(true);
+    setErrorMessage(null);
     try {
       await onLogin();
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      const isCancelled = e?.message?.includes('cancelled') || e?.code?.includes('cancelled') || e?.message?.includes('closed') || e?.code?.includes('closed');
+      if (isCancelled) {
+        setErrorMessage("Standard login was dismissed or blocked. Try our fully functional, zero-friction Guest/Demo Mode below!");
+      } else {
+        setErrorMessage(e?.message || "Standard login failed. Please feel free to bypass this with Guest/Demo Mode below.");
+      }
     } finally {
       setIsLoggingIn(false);
     }
+  };
+
+  const handleDemoLoginClick = () => {
+    onDemoLogin();
   };
 
   return (
@@ -86,14 +99,32 @@ export function Login({ onLogin }: LoginProps) {
               The AI-powered habit tracker that adapts to real life. Build habits without guilt, protect your streaks when you're busy, and actually stick to your goals.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            {errorMessage && (
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-8 max-w-xl mx-auto bg-amber-500/10 border border-amber-500/20 text-amber-300 p-4 rounded-xl text-sm leading-relaxed flex items-center gap-3 text-left"
+              >
+                <Zap className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                <span>{errorMessage}</span>
+              </motion.div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto">
               <button 
                 onClick={handleLoginClick}
                 disabled={isLoggingIn}
-                className="w-full sm:w-auto px-8 py-4 bg-white text-black hover:bg-slate-200 rounded-xl font-bold transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
+                className="w-full sm:w-auto px-8 py-4 bg-white text-black hover:bg-slate-200 rounded-xl font-bold transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 active:scale-95 disabled:opacity-70 disabled:active:scale-100 flex-1"
               >
                 {isLoggingIn ? <Loader2 className="w-5 h-5 animate-spin" /> : <Chrome className="w-5 h-5" />}
-                {isLoggingIn ? 'Signing in...' : 'Start Tracking Free'}
+                {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
+              </button>
+              <button 
+                onClick={handleDemoLoginClick}
+                className="w-full sm:w-auto px-8 py-4 bg-transparent text-white border border-white/20 hover:border-white/40 hover:bg-white/5 rounded-xl font-bold transition-all flex items-center justify-center gap-3 active:scale-95 flex-1"
+              >
+                <Zap className="w-5 h-5 text-indigo-400" />
+                <span>Try Guest / Demo Mode</span>
               </button>
             </div>
             
@@ -246,14 +277,23 @@ export function Login({ onLogin }: LoginProps) {
             <h2 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6">Consistency should feel human.</h2>
             <p className="text-xl text-slate-400 mb-10">Start building habits that survive real life. Free forever for the core features.</p>
             
-            <button 
-              onClick={handleLoginClick}
-              disabled={isLoggingIn}
-              className="px-10 py-5 bg-white text-black hover:bg-slate-200 rounded-2xl font-bold transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)] inline-flex items-center justify-center gap-3 active:scale-95 text-lg disabled:opacity-70 disabled:active:scale-100"
-            >
-              {isLoggingIn ? <Loader2 className="w-6 h-6 animate-spin" /> : <Chrome className="w-6 h-6" />}
-              {isLoggingIn ? 'Redirecting...' : 'Start Tracking Free'}
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-lg mx-auto">
+               <button 
+                 onClick={handleLoginClick}
+                 disabled={isLoggingIn}
+                 className="w-full px-10 py-5 bg-white text-black hover:bg-slate-200 rounded-2xl font-bold transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)] flex items-center justify-center gap-3 active:scale-95 text-lg disabled:opacity-70 disabled:active:scale-100 flex-1"
+               >
+                 {isLoggingIn ? <Loader2 className="w-6 h-6 animate-spin" /> : <Chrome className="w-6 h-6" />}
+                 {isLoggingIn ? 'Redirecting...' : 'Sign in with Google'}
+               </button>
+               <button 
+                 onClick={handleDemoLoginClick}
+                 className="w-full px-10 py-5 bg-transparent text-white border border-white/20 hover:border-white/40 hover:bg-white/5 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 active:scale-95 text-lg flex-1"
+               >
+                 <Zap className="w-6 h-6 text-indigo-400" />
+                 <span>Try Guest / Demo Mode</span>
+               </button>
+            </div>
          </div>
       </section>
       

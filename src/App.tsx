@@ -21,7 +21,7 @@ import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
 
 export default function App() {
-  const { user, profile, loading, completeOnboarding } = useAuth();
+  const { user, profile, loading, completeOnboarding, loginAsDemo } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
 
   const handleLogin = async () => {
@@ -39,6 +39,7 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
+      localStorage.removeItem('demo_user_profile');
       await signOut(auth);
       setCurrentPage('dashboard');
     } catch (error) {
@@ -58,7 +59,7 @@ export default function App() {
   }
 
   if (!user) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} onDemoLogin={loginAsDemo} />;
   }
 
   const renderPage = () => {

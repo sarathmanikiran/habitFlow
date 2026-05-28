@@ -14,6 +14,27 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const db = initializeFirestore(app, { experimentalForceLongPolling: true });
-export const auth = getAuth(app);
+
+const rawAuth = getAuth(app);
+export const auth = new Proxy(rawAuth, {
+  get(target, prop, receiver) {
+    if (prop === 'currentUser') {
+      const demoUser = localStorage.getItem('demo_user_profile');
+      if (demoUser) {
+        try {
+          return JSON.parse(demoUser);
+        } catch (e) {
+          return null;
+        }
+      }
+    }
+    const val = Reflect.get(target, prop, receiver);
+    if (typeof val === 'function') {
+      return val.bind(target);
+    }
+    return val;
+  }
+});
+
 export const googleProvider = new GoogleAuthProvider();
 

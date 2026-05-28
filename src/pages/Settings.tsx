@@ -66,6 +66,27 @@ export function Settings() {
     if (!user) return;
     setIsExporting(true);
     try {
+      if (user.uid === 'demo_user') {
+        const localHabits = localStorage.getItem('demo_habits');
+        const localCompletions = localStorage.getItem('demo_completions');
+        const localGoals = localStorage.getItem('demo_goals');
+        const exportData = {
+          habits: localHabits ? JSON.parse(localHabits) : [],
+          completions: localCompletions ? JSON.parse(localCompletions) : [],
+          goals: localGoals ? JSON.parse(localGoals) : []
+        };
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `habitflow-data-demo.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return;
+      }
+
       const collections = ['habits', 'completions', 'goals'];
       const exportData: any = {};
 
@@ -96,19 +117,30 @@ export function Settings() {
     if (!user) return;
     setIsGeneratingPrint(true);
     try {
-      const habitsQ = query(collection(db, 'habits'), where('userId', '==', user.uid));
-      const habitsSnapshot = await getDocs(habitsQ);
-      const habits = habitsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
-      habits.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
+      let habits: any[] = [];
+      let completions: any[] = [];
       const currentMonth = format(new Date(), 'yyyy-MM');
-      const completionsQ = query(
-        collection(db, 'completions'), 
-        where('userId', '==', user.uid)
-      );
-      const completionsSnapshot = await getDocs(completionsQ);
-      const completions = completionsSnapshot.docs.map(doc => doc.data())
-        .filter((c: any) => c.date >= `${currentMonth}-01` && c.date <= `${currentMonth}-31`);
+
+      if (user.uid === 'demo_user') {
+        const localHabits = localStorage.getItem('demo_habits');
+        const localCompletions = localStorage.getItem('demo_completions');
+        const itemsList = localHabits ? JSON.parse(localHabits) : [];
+        habits = itemsList.filter((h: any) => !h.archived);
+        completions = localCompletions ? JSON.parse(localCompletions) : [];
+      } else {
+        const habitsQ = query(collection(db, 'habits'), where('userId', '==', user.uid));
+        const habitsSnapshot = await getDocs(habitsQ);
+        habits = habitsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+        habits.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+        const completionsQ = query(
+          collection(db, 'completions'), 
+          where('userId', '==', user.uid)
+        );
+        const completionsSnapshot = await getDocs(completionsQ);
+        completions = completionsSnapshot.docs.map(doc => doc.data())
+          .filter((c: any) => c.date >= `${currentMonth}-01` && c.date <= `${currentMonth}-31`);
+      }
 
       const printWindow = window.open('', '_blank');
       if (!printWindow) return;
@@ -127,8 +159,8 @@ export function Settings() {
             <div class="check-grid">
               ${Array.from({ length: 31 }).map((_, i) => {
                 const dayNum = i + 1;
-                const dateStr = `${currentMonth}-${dayNum.toString().padStart(2, '0')}`;
-                const isDone = habitCompletions.some((c: any) => c.date === dateStr);
+                const dateString = `${currentMonth}-${dayNum.toString().padStart(2, '0')}`;
+                const isDone = habitCompletions.some((c: any) => c.date === dateString);
                 return `<div class="check-box ${isDone ? 'checked' : ''}">${dayNum}</div>`;
               }).join('')}
             </div>
@@ -167,6 +199,7 @@ export function Settings() {
                 background: #10b981 !important;
                 border-color: #059669 !important;
                 color: #fff !important;
+                border-radius: 4px;
               }
               .legend { margin-top: 40px; font-size: 10px; color: #94a3b8; border-top: 1px dashed #e2e8f0; padding-top: 15px; text-align: center; font-style: italic; }
             </style>
@@ -201,6 +234,21 @@ export function Settings() {
 
   const handleDeleteAccount = async () => {
     if (!user) return;
+    if (user.uid === 'demo_user') {
+      localStorage.removeItem('demo_user_profile');
+      localStorage.removeItem('demo_profile_data');
+      localStorage.removeItem('demo_habits');
+      localStorage.removeItem('demo_completions');
+      localStorage.removeItem('demo_goals');
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('demo_tasks_')) {
+          localStorage.removeItem(key);
+        }
+      });
+      window.location.reload();
+      return;
+    }
+
     try {
       // 1. Delete user data from Firestore
       const collections = ['habits', 'completions', 'goals'];

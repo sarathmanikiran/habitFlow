@@ -59,6 +59,33 @@ export function Habits() {
   const [selectedCategory, setSelectedCategory] = useState(CATEGORIES[1].name);
   const [selectedColor, setSelectedColor] = useState(HABIT_COLORS[0].value);
   const [showArchived, setShowArchived] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setToast({ message, type });
+    const id = setTimeout(() => {
+      setToast(prev => prev?.message === message ? null : prev);
+    }, 3000);
+    return () => clearTimeout(id);
+  };
+
+  const handleToggleCompletion = async (habitId: string, dateStr: string) => {
+    const habit = dbHabits.find(h => h.id === habitId);
+    if (!habit) return;
+    const newStatus = await toggleCompletion(habitId, dateStr);
+    if (newStatus === 'completed') {
+      showToast(`Completed: "${habit.name}"! ✨`, 'success');
+    } else {
+      showToast(`Unchecked: "${habit.name}".`, 'info');
+    }
+  };
+
+  const handleDeleteHabit = async (id: string) => {
+    const habit = dbHabits.find(h => h.id === id);
+    if (!habit) return;
+    await deleteHabit(id);
+    showToast(`Deleted: "${habit.name}" successfully.`, 'error');
+  };
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -161,7 +188,7 @@ export function Habits() {
                   <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{habit.category}</p>
                 </div>
                 <button 
-                  onClick={() => toggleCompletion(habit.id, todayStr)}
+                  onClick={() => handleToggleCompletion(habit.id, todayStr)}
                   className={cn(
                     "w-10 h-10 flex-shrink-0 rounded-xl border flex items-center justify-center transition-all active:scale-90",
                     isDone ? (habitColor?.bg || "bg-indigo-500") + " border-transparent text-white shadow-lg" : "bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400"
@@ -278,15 +305,19 @@ export function Habits() {
                             <span className="text-[10px] font-black text-orange-500">{calculateStreak(habit.id)}</span>
                           </div>
                           <button
-                            onClick={() => toggleArchive(habit.id)}
-                            className="text-slate-600 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-all hidden sm:block p-1"
+                            onClick={async () => {
+                              const wasArchived = habit.archived;
+                              await toggleArchive(habit.id);
+                              showToast(wasArchived ? `Unarchived: "${habit.name}"` : `Archived: "${habit.name}"`, 'info');
+                            }}
+                            className="text-slate-500 hover:text-indigo-400 dark:text-slate-400 sm:opacity-0 sm:group-hover:opacity-100 transition-all p-1"
                             title={habit.archived ? "Unarchive Habit" : "Archive Habit"}
                           >
                             {habit.archived ? <ArchiveRestore className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
                           </button>
                           <button 
                             onClick={() => setDeleteConfirmId(habit.id)}
-                            className="text-slate-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all hidden sm:block p-1"
+                            className="text-slate-500 hover:text-red-400 dark:text-slate-400 sm:opacity-0 sm:group-hover:opacity-100 transition-all p-1"
                             title="Delete Habit"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -312,7 +343,7 @@ export function Habits() {
                               day={day} 
                               status={status} 
                               colorClass={habitColor?.bg || "bg-emerald-500"}
-                              onToggle={() => toggleCompletion(habit.id, dateStr)} 
+                              onToggle={() => handleToggleCompletion(habit.id, dateStr)} 
                             />
                           </div>
                         </td>
@@ -531,7 +562,7 @@ export function Habits() {
                 <button 
                   onClick={async () => {
                     if (deleteConfirmId) {
-                      await deleteHabit(deleteConfirmId);
+                      await handleDeleteHabit(deleteConfirmId);
                       setDeleteConfirmId(null);
                     }
                   }}
@@ -542,6 +573,34 @@ export function Habits() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={cn(
+              "fixed bottom-6 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl backdrop-blur-md max-w-sm",
+              toast.type === 'success' && "bg-[#0c1e13] border-emerald-500/30 text-emerald-300",
+              toast.type === 'info' && "bg-[#101424] border-indigo-500/30 text-indigo-300",
+              toast.type === 'error' && "bg-[#241010] border-red-500/30 text-red-300"
+            )}
+          >
+            {toast.type === 'success' && <Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />}
+            {toast.type === 'info' && <motion.div className="w-2.5 h-2.5 rounded-full bg-indigo-400 flex-shrink-0 animate-pulse" />}
+            {toast.type === 'error' && <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />}
+            <span className="text-xs md:text-sm font-bold tracking-tight">{toast.message}</span>
+            <button 
+              onClick={() => setToast(null)} 
+              className="ml-2 text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

@@ -15,7 +15,10 @@ import {
   Share2,
   MoreVertical,
   Trash2,
-  Edit2
+  Edit2,
+  AlertTriangle,
+  Check,
+  X
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { 
@@ -53,6 +56,35 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
   const [localActiveHabits, setLocalActiveHabits] = useState<any[]>([]);
   const [editingHabit, setEditingHabit] = useState<any>(null);
   const [editName, setEditName] = useState('');
+  
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    setToast({ message, type });
+    const id = setTimeout(() => {
+      setToast(prev => prev?.message === message ? null : prev);
+    }, 3000);
+    return () => clearTimeout(id);
+  };
+
+  const handleToggleCompletion = async (habitId: string) => {
+    const habit = habits.find(h => h.id === habitId);
+    if (!habit) return;
+    const newStatus = await toggleCompletion(habitId, todayStr);
+    if (newStatus === 'completed') {
+      showToast(`Completed: "${habit.name}"! ✨`, 'success');
+    } else {
+      showToast(`Unchecked: "${habit.name}".`, 'info');
+    }
+  };
+
+  const handleDeleteHabit = async (id: string) => {
+    const habit = habits.find(h => h.id === id);
+    if (!habit) return;
+    await deleteHabit(id);
+    showToast(`Deleted: "${habit.name}" successfully.`, 'error');
+  };
   
   const activeHabits = useMemo(() => habits.filter(h => !h.archived), [habits]);
 
@@ -261,8 +293,8 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
                           desc={habit.category} 
                           colorClass={habitColor?.text || "text-indigo-500"}
                           completed={!!comp?.completed} 
-                          onToggle={() => toggleCompletion(habit.id, todayStr)}
-                          onDelete={() => deleteHabit(habit.id)}
+                          onToggle={() => handleToggleCompletion(habit.id)}
+                          onDelete={() => setDeleteConfirmId(habit.id)}
                           onEdit={() => {
                             setEditingHabit(habit);
                             setEditName(habit.name);
@@ -493,6 +525,82 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirmId && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDeleteConfirmId(null)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm glass-card p-8 border-white/10 shadow-2xl text-center"
+            >
+              <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center justify-center text-red-500 mx-auto mb-6">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 uppercase tracking-widest">Delete Habit?</h3>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-8">
+                This will delete <span className="text-slate-900 dark:text-white font-bold">"{habits.find(h => h.id === deleteConfirmId)?.name}"</span> and all its progress history. This cannot be undone.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <button 
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={async () => {
+                    if (deleteConfirmId) {
+                      await handleDeleteHabit(deleteConfirmId);
+                      setDeleteConfirmId(null);
+                    }
+                  }}
+                  className="py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-xl shadow-red-500/20"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={cn(
+              "fixed bottom-6 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-xl border shadow-2xl backdrop-blur-md max-w-sm",
+              toast.type === 'success' && "bg-[#0c1e13] border-emerald-500/30 text-emerald-300",
+              toast.type === 'info' && "bg-[#101424] border-indigo-500/30 text-indigo-300",
+              toast.type === 'error' && "bg-[#241010] border-red-500/30 text-red-300"
+            )}
+          >
+            {toast.type === 'success' && <Check className="w-5 h-5 text-emerald-400 flex-shrink-0" />}
+            {toast.type === 'info' && <motion.div className="w-2.5 h-2.5 rounded-full bg-indigo-400 flex-shrink-0 animate-pulse" />}
+            {toast.type === 'error' && <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />}
+            <span className="text-xs md:text-sm font-bold tracking-tight">{toast.message}</span>
+            <button 
+              onClick={() => setToast(null)} 
+              className="ml-2 text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
