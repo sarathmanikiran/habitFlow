@@ -142,26 +142,34 @@ export function AchievementsModal({ isOpen, onClose, stats }: AchievementsModalP
                 <div 
                   key={achievement.id}
                   className={cn(
-                    "p-6 rounded-2xl border transition-all duration-300 relative overflow-hidden group",
+                    "p-6 rounded-2xl border transition-all duration-500 relative overflow-hidden group",
                     achievement.unlocked 
-                      ? `${achievement.bg} ${achievement.border}` 
+                      ? `${achievement.bg} ${achievement.border} hover:-translate-y-1 hover:shadow-lg` 
                       : "bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/5 grayscale-[50%] opacity-70"
                   )}
                 >
                   {/* Background decoration */}
                   {achievement.unlocked && (
-                    <div className="absolute -right-6 -bottom-6 opacity-[0.05] group-hover:scale-110 transition-transform duration-500 pointer-events-none">
-                      <achievement.icon className={cn("w-32 h-32", achievement.color)} />
-                    </div>
+                    <>
+                      <div className="absolute -right-6 -bottom-6 opacity-[0.05] group-hover:scale-125 group-hover:rotate-12 transition-transform duration-700 pointer-events-none">
+                        <achievement.icon className={cn("w-32 h-32", achievement.color)} />
+                      </div>
+                      {/* Hover subtle glow on the whole card */}
+                      <div className="absolute inset-0 bg-white/0 group-hover:bg-white/[0.02] dark:group-hover:bg-white/[0.01] transition-colors duration-500 pointer-events-none" />
+                    </>
                   )}
 
                   <div className="relative z-10">
                     <div className="flex items-start justify-between mb-4">
                       <div className={cn(
-                        "w-12 h-12 rounded-xl flex items-center justify-center",
+                        "w-12 h-12 rounded-xl flex items-center justify-center relative",
                         achievement.unlocked ? achievement.bg : "bg-slate-200 dark:bg-white/5"
                       )}>
-                        <achievement.icon className={cn("w-6 h-6", achievement.unlocked ? achievement.color : "text-slate-400 dark:text-slate-600")} strokeWidth={achievement.unlocked ? 2.5 : 2} />
+                        {/* Glow effect on hover */}
+                        {achievement.unlocked && (
+                          <div className={cn("absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 group-hover:animate-ping blur-sm transition-all duration-700 pointer-events-none", achievement.bg)} style={{ animationDuration: '2s' }} />
+                        )}
+                        <achievement.icon className={cn("w-6 h-6 relative z-10 transition-transform duration-500 group-hover:scale-125", achievement.unlocked ? achievement.color : "text-slate-400 dark:text-slate-600")} strokeWidth={achievement.unlocked ? 2.5 : 2} />
                       </div>
                       
                       {achievement.unlocked ? (
