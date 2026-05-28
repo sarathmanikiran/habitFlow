@@ -7,6 +7,10 @@ export interface UserProfile {
   photoURL: string | null;
   joinedAt: number;
   hasCompletedOnboarding?: boolean;
+  privacyPreferences?: {
+    shareAnalytics?: boolean;
+    personalizedCoach?: boolean;
+  };
 }
 
 export interface Habit {

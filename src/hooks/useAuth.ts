@@ -71,5 +71,14 @@ export function useAuth() {
     setProfile(prev => prev ? { ...prev, hasCompletedOnboarding: true } : null);
   };
 
-  return { user, profile, loading, completeOnboarding };
+  const updatePrivacyPreferences = async (preferences: any) => {
+    if (!user) return;
+    const profileRef = doc(db, 'users', user.uid);
+    await updateDoc(profileRef, {
+      privacyPreferences: preferences
+    });
+    setProfile(prev => prev ? { ...prev, privacyPreferences: preferences } : null);
+  };
+
+  return { user, profile, loading, completeOnboarding, updatePrivacyPreferences };
 }

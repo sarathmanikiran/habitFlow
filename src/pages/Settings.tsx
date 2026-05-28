@@ -24,11 +24,13 @@ import { collection, query, where, getDocs, writeBatch, orderBy } from 'firebase
 import { format } from 'date-fns';
 import { useHabitData } from '../hooks/useHabitData';
 import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../hooks/useAuth';
 
 export function Settings() {
-  const user = auth.currentUser;
+  const { user, profile, updatePrivacyPreferences } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isGeneratingPrint, setIsGeneratingPrint] = useState(false);
 
@@ -74,19 +76,19 @@ export function Settings() {
     if (!user) return;
     setIsGeneratingPrint(true);
     try {
-      const habitsQ = query(collection(db, 'habits'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'));
+      const habitsQ = query(collection(db, 'habits'), where('userId', '==', user.uid));
       const habitsSnapshot = await getDocs(habitsQ);
-      const habits = habitsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const habits = habitsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
+      habits.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
 
       const currentMonth = format(new Date(), 'yyyy-MM');
       const completionsQ = query(
         collection(db, 'completions'), 
-        where('userId', '==', user.uid),
-        where('date', '>=', `${currentMonth}-01`),
-        where('date', '<=', `${currentMonth}-31`)
+        where('userId', '==', user.uid)
       );
       const completionsSnapshot = await getDocs(completionsQ);
-      const completions = completionsSnapshot.docs.map(doc => doc.data());
+      const completions = completionsSnapshot.docs.map(doc => doc.data())
+        .filter((c: any) => c.date >= `${currentMonth}-01` && c.date <= `${currentMonth}-31`);
 
       const printWindow = window.open('', '_blank');
       if (!printWindow) return;
@@ -255,7 +257,7 @@ export function Settings() {
         </SettingSection>
 
         <SettingSection title="Privacy & Security">
-            <SettingItem icon={Shield} title="Data Privacy" description="Manage your data and visibility" />
+            <SettingItem icon={Shield} title="Data Privacy" description="Manage your data and visibility" onClick={() => setIsPrivacyModalOpen(true)} />
             <div className="w-full flex items-center justify-between p-6 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors text-left group">
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:border-indigo-500/30 transition-all">
@@ -353,6 +355,71 @@ export function Settings() {
             </div>
         )}
       </AnimatePresence>
+
+      <AnimatePresence>
+        {isPrivacyModalOpen && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setIsPrivacyModalOpen(false)}
+                    className="absolute inset-0 bg-black/50 backdrop-blur-md"
+                />
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                    className="relative w-full max-w-md glass-card overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                >
+                    <div className="p-6 border-b border-slate-200 dark:border-white/10 flex items-center justify-between sticky top-0 bg-white/50 dark:bg-black/50 backdrop-blur-md z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                                <Shield className="w-5 h-5" />
+                            </div>
+                            <h2 className="text-xl font-bold text-slate-900 dark:text-white">Data Privacy</h2>
+                        </div>
+                        <button 
+                            onClick={() => setIsPrivacyModalOpen(false)}
+                            className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
+                    
+                    <div className="p-6 overflow-y-auto divide-y divide-slate-100 dark:divide-white/5 space-y-6">
+                        <div className="pb-6">
+                           <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Anonymous Analytics</h3>
+                           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Help us improve HabitFlow by sharing anonymous usage data. This data is untethered from your identity.</p>
+                           <div className="border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+                               <SettingToggle 
+                                   icon={Database} 
+                                   title="Share Analytics" 
+                                   description="Opt-in to anonymous telemetry" 
+                                   checked={profile?.privacyPreferences?.shareAnalytics ?? true} 
+                                   onToggle={(val: boolean) => updatePrivacyPreferences({...profile?.privacyPreferences, shareAnalytics: !profile?.privacyPreferences?.shareAnalytics})} 
+                               />
+                           </div>
+                        </div>
+
+                        <div className="pt-6">
+                           <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Personalized AI Coach</h3>
+                           <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Allow the AI Coach to read your habit descriptions and progress history to provide tailored guidance.</p>
+                           <div className="border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+                               <SettingToggle 
+                                   icon={Smartphone} 
+                                   title="Allow AI Context" 
+                                   description="Share habit context with AI" 
+                                   checked={profile?.privacyPreferences?.personalizedCoach ?? true} 
+                                   onToggle={(val: boolean) => updatePrivacyPreferences({...profile?.privacyPreferences, personalizedCoach: !profile?.privacyPreferences?.personalizedCoach})} 
+                               />
+                           </div>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -368,9 +435,9 @@ function SettingSection({ title, children }: { title: string, children: React.Re
     )
 }
 
-function SettingItem({ icon: Icon, title, description }: any) {
+function SettingItem({ icon: Icon, title, description, onClick }: any) {
     return (
-        <button className="w-full flex items-center justify-between p-6 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors text-left group">
+        <button onClick={onClick} className="w-full flex items-center justify-between p-6 hover:bg-slate-50 dark:hover:bg-white/[0.02] transition-colors text-left group">
             <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:border-indigo-500/30 transition-all">
                     <Icon className="w-5 h-5" />
