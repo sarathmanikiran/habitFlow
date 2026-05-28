@@ -55,10 +55,7 @@ export function Login({ onLogin }: LoginProps) {
             {isLoggingIn ? 'Signing in...' : 'Sign in with Google'}
           </button>
           
-          <button className="w-full flex items-center justify-center gap-4 bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white py-4 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-white/10 transition-all group">
-            <Github className="w-5 h-5 group-hover:scale-110 transition-transform" />
-            Sign in with GitHub
-          </button>
+
         </div>
         
         <div className="mt-12 pt-8 border-t border-slate-200 dark:border-white/5 grid grid-cols-3 gap-4">
