@@ -28,6 +28,8 @@ import {
 import { useHabitData } from '../hooks/useHabitData';
 import { format, subDays, isSameDay } from 'date-fns';
 import { ShareStreakModal } from '../components/ShareStreakModal';
+import { AchievementsModal } from '../components/AchievementsModal';
+import { calculateTotalXP, calculateLevelAndXP } from '../lib/gamification';
 
 const HABIT_COLORS = [
   { value: 'indigo', bg: 'bg-indigo-500', text: 'text-indigo-400' },
@@ -44,8 +46,13 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
   const { habits, completions, toggleCompletion, calculateStreak } = useHabitData();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
   const [shareStreak, setShareStreak] = useState<any>(null);
+  const [showAchievementsModal, setShowAchievementsModal] = useState(false);
   
   const activeHabits = useMemo(() => habits.filter(h => !h.archived), [habits]);
+
+  // Gamification XP
+  const totalXP = useMemo(() => calculateTotalXP(completions, habits), [completions, habits]);
+  const { level, title, nextLevelXP, progress } = useMemo(() => calculateLevelAndXP(totalXP), [totalXP]);
 
   // Stats calculation
   const totalCompleted = useMemo(() => completions.filter(c => c.completed).length, [completions]);
@@ -73,7 +80,8 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
   const achievements = useMemo(() => {
     const list = [];
     if (totalCompleted >= 100) list.push({ icon: Trophy, label: "Century Club", color: "text-amber-400", bg: "bg-amber-500/10" });
-    if (maxStreak >= 7) list.push({ icon: Award, label: "Consistency Starter", color: "text-emerald-400", bg: "bg-emerald-500/10" });
+    if (level >= 10) list.push({ icon: Award, label: "Level 10 Vanguard", color: "text-purple-400", bg: "bg-purple-500/10" });
+    if (maxStreak >= 7) list.push({ icon: Flame, label: "7-Day Streak", color: "text-orange-400", bg: "bg-orange-500/10" });
     if (maxStreak >= 30) list.push({ icon: Medal, label: "Habit Master", color: "text-indigo-400", bg: "bg-indigo-500/10" });
     
     // Check for "Perfect Day" (all habits completed today)
@@ -83,7 +91,7 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
     }
     
     return list;
-  }, [totalCompleted, maxStreak, activeHabits, completions, todayStr]);
+  }, [totalCompleted, maxStreak, activeHabits, completions, todayStr, level]);
 
   return (
     <div className="space-y-6 md:space-y-8 pb-12 transition-colors duration-300">
@@ -97,7 +105,7 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
             onClick={() => {
               const shareData = {
                 title: 'HabitFlow Progress',
-                text: `I've completed ${totalCompleted} habits on HabitFlow! Check out my consistency score: ${completionRate}%`,
+                text: `I've reached Level ${level} with ${totalXP} XP on HabitFlow!`,
                 url: window.location.origin
               };
 
@@ -120,6 +128,37 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
           </button>
         </div>
       </header>
+
+      {/* XP System Bar */}
+      <div className="glass-card p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-indigo-500/20 dark:border-indigo-400/10">
+          <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex flex-col items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.4)] relative">
+                 <span className="text-[9px] text-white/70 font-bold uppercase tracking-widest leading-none mt-1">Lvl</span>
+                 <span className="text-white font-black text-2xl leading-none">{level}</span>
+              </div>
+              <div>
+                 <h2 className="text-xl font-bold text-slate-900 dark:text-white flex flex-wrap items-center gap-2">
+                   {title}
+                   <span className="text-[10px] bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 px-2.5 py-1 rounded-full font-black uppercase tracking-widest">{totalXP} XP</span>
+                 </h2>
+                 <p className="text-xs text-slate-500 mt-1 font-bold">Earn XP by completing habits and building streaks.</p>
+              </div>
+          </div>
+          <div className="w-full md:w-1/3">
+             <div className="flex justify-between text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2">
+                 <span>Level {level}</span>
+                 <span>Level {level + 1}</span>
+             </div>
+             <div className="h-3 w-full bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden shadow-inner">
+                 <motion.div 
+                     initial={{ width: 0 }}
+                     animate={{ width: `${progress}%` }}
+                     className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                 />
+             </div>
+             <p className="text-right text-[10px] text-slate-400 mt-1 font-bold uppercase tracking-widest">{Math.max(0, nextLevelXP - totalXP)} XP to unlock</p>
+          </div>
+      </div>
 
       {/* Hero Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
@@ -191,21 +230,37 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
           </div>
 
           {/* Achievement Row */}
-          {achievements.length > 0 && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {achievements.map((ach, idx) => (
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  key={idx} 
-                  className={cn("flex flex-col items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-white/5 transition-all text-center", ach.bg)}
-                >
-                  <ach.icon className={cn("w-6 h-6", ach.color)} />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white">{ach.label}</span>
-                </motion.div>
-              ))}
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Recent Achievements</h3>
+               <button 
+                 onClick={() => setShowAchievementsModal(true)}
+                 className="text-xs font-bold text-indigo-500 hover:text-indigo-600 transition-colors uppercase tracking-widest flex items-center gap-1"
+               >
+                 View All Board <ChevronRight className="w-4 h-4" />
+               </button>
             </div>
-          )}
+            
+            {achievements.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {achievements.map((ach, idx) => (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    key={idx} 
+                    className={cn("flex flex-col items-center gap-3 p-4 rounded-2xl border border-slate-200 dark:border-white/5 transition-all text-center", ach.bg)}
+                  >
+                    <ach.icon className={cn("w-6 h-6", ach.color)} />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white">{ach.label}</span>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="glass-card p-6 text-center text-slate-500 text-sm font-bold border-dashed">
+                Keep tracking habits to unlock achievements.
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Side Progress Widgets */}
@@ -320,6 +375,19 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
         onClose={() => setShareStreak(null)}
         streak={shareStreak}
         userName={userName}
+      />
+
+      <AchievementsModal 
+        isOpen={showAchievementsModal}
+        onClose={() => setShowAchievementsModal(false)}
+        stats={{
+          level,
+          totalXP,
+          totalCompleted,
+          maxStreak,
+          activeHabitsCount: activeHabits.length,
+          perfectDayUnlocked: activeHabits.length > 0 && completions.filter(c => c.date === todayStr && c.completed && activeHabits.some(h => h.id === c.habitId)).length === activeHabits.length
+        }}
       />
     </div>
   );

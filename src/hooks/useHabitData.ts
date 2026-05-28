@@ -98,16 +98,18 @@ export function useHabitData() {
     if (!auth.currentUser) return;
     const path = 'habits';
     try {
-      await addDoc(collection(db, path), {
+      const data: any = {
         userId: auth.currentUser.uid,
         name,
         category,
         color,
         frequency,
-        reminderTime,
-        reminderDays,
         createdAt: serverTimestamp()
-      });
+      };
+      if (reminderTime !== undefined) data.reminderTime = reminderTime;
+      if (reminderDays !== undefined) data.reminderDays = reminderDays;
+
+      await addDoc(collection(db, path), data);
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, path);
     }
