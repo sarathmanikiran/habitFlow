@@ -210,22 +210,48 @@ export function Habits() {
             <tbody>
               {habits.length === 0 ? (
                 <tr>
-                  <td colSpan={days.length + 1} className="p-20 text-center">
-                    <div className="max-w-xs mx-auto">
+                  <td colSpan={days.length + 1} className="p-16 md:p-24 text-center border-b border-transparent">
+                    <div className="max-w-md mx-auto">
                       {showArchived ? (
                         <>
-                          <Archive className="w-12 h-12 text-slate-300 dark:text-white/10 mx-auto mb-4" />
-                          <p className="text-slate-900 dark:text-white font-bold mb-2">No archived habits</p>
-                          <p className="text-slate-500 text-sm mb-6">Habits you archive will appear here.</p>
+                          <div className="relative w-48 h-48 mx-auto mb-6 opacity-80 transition-opacity hover:opacity-100">
+                            <div className="absolute inset-0 bg-slate-500/5 rounded-full blur-3xl"></div>
+                            <svg viewBox="0 0 200 200" className="w-full h-full relative z-10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="100" cy="100" r="80" className="fill-slate-50 dark:fill-slate-800/30" />
+                              <rect x="60" y="80" width="80" height="60" rx="8" className="fill-white dark:fill-slate-800/80 stroke-slate-300 dark:stroke-slate-600" strokeWidth="4" />
+                              <path d="M60 88C60 83.5817 63.5817 80 68 80H132C136.418 80 140 83.5817 140 88V100H60V88Z" className="fill-slate-200 dark:fill-slate-700" />
+                              <rect x="90" y="90" width="20" height="6" rx="3" className="fill-slate-400 dark:fill-slate-500" />
+                              <path d="M140 140H60" className="stroke-slate-300 dark:stroke-slate-600" strokeWidth="4" strokeLinecap="round" />
+                            </svg>
+                          </div>
+                          <h3 className="text-xl text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2">No Archived Habits</h3>
+                          <p className="text-slate-500 text-sm mb-6">Habits you choose to archive instead of delete will safely rest here.</p>
                         </>
                       ) : (
                         <>
-                          <Plus className="w-12 h-12 text-slate-300 dark:text-white/10 mx-auto mb-4" />
-                          <p className="text-slate-900 dark:text-white font-bold mb-2">No active habits tracked yet</p>
-                          <p className="text-slate-500 text-sm mb-6">Start building your streak by adding your first habit today.</p>
+                          <div className="relative w-48 h-48 mx-auto mb-6">
+                            <div className="absolute inset-0 bg-indigo-500/10 rounded-full animate-pulse blur-3xl"></div>
+                            <svg viewBox="0 0 200 200" className="w-full h-full relative z-10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="100" cy="100" r="80" className="fill-slate-50 dark:fill-[#0f1423]" />
+                              <rect x="60" y="60" width="80" height="80" rx="12" className="fill-white dark:fill-white/5 stroke-slate-200 dark:stroke-white/10" strokeWidth="4" />
+                              <rect x="72" y="72" width="16" height="16" rx="4" className="fill-indigo-500" />
+                              <rect x="92" y="72" width="16" height="16" rx="4" className="fill-indigo-400" />
+                              <rect x="112" y="72" width="16" height="16" rx="4" className="fill-slate-200 dark:fill-slate-700/50" />
+                              <rect x="72" y="92" width="16" height="16" rx="4" className="fill-indigo-500" />
+                              <rect x="92" y="92" width="16" height="16" rx="4" className="fill-emerald-400" />
+                              <rect x="112" y="92" width="16" height="16" rx="4" className="fill-slate-200 dark:fill-slate-700/50" />
+                              <rect x="72" y="112" width="16" height="16" rx="4" className="fill-slate-200 dark:fill-slate-700/50" />
+                              <rect x="92" y="112" width="16" height="16" rx="4" className="fill-slate-200 dark:fill-slate-700/50" />
+                              <rect x="112" y="112" width="16" height="16" rx="4" className="fill-slate-200 dark:fill-slate-700/50" />
+                              <circle cx="140" cy="140" r="24" className="fill-indigo-600 shadow-xl" />
+                              <path d="M130 140L137 147L150 133" className="stroke-white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                          <h3 className="text-xl text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2">Build Your Streak</h3>
+                          <p className="text-slate-500 text-sm mx-auto max-w-sm mb-8 leading-relaxed">Success is the product of daily habits—not once-in-a-lifetime transformations. Start tracking your first habit today.</p>
                           <button 
                             onClick={() => setIsModalOpen(true)}
-                            className="btn-primary px-6 py-2"
+                            className="btn-primary px-8 py-3.5 shadow-lg shadow-indigo-500/20 font-bold uppercase tracking-widest text-sm transition-all hover:scale-105 active:scale-95"
                           >
                             Create My First Habit
                           </button>

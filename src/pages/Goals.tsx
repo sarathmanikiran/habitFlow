@@ -37,11 +37,22 @@ export function Goals() {
       </header>
 
       {activeGoals.length === 0 && !loading ? (
-        <div className="glass-card p-12 text-center">
-          <Target className="w-12 h-12 text-slate-300 dark:text-white/10 mx-auto mb-4" />
-          <p className="text-slate-900 dark:text-white font-bold">No active goals</p>
-          <p className="text-slate-500 text-sm mb-6">Setting clear objectives is the first step in turning the invisible into the visible.</p>
-          <button onClick={() => setIsModalOpen(true)} className="btn-primary px-6 py-2">Set My First Goal</button>
+        <div className="glass-card p-12 md:p-16 text-center max-w-2xl mx-auto mt-8 border-dashed border-2 border-slate-200 dark:border-white/10">
+          <div className="relative w-48 h-48 mx-auto mb-6">
+            <div className="absolute inset-0 bg-indigo-500/10 rounded-full animate-pulse blur-3xl"></div>
+            <svg viewBox="0 0 200 200" className="w-full h-full relative z-10" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="100" cy="100" r="80" className="fill-slate-50 dark:fill-[#0f1423]" />
+              <path d="M60 130L100 70L140 130H60Z" className="fill-indigo-100 dark:fill-indigo-500/20" />
+              <path d="M90 140L125 90L160 140H90Z" className="fill-indigo-200 dark:fill-indigo-500/40" />
+              <path d="M100 70V40" className="stroke-indigo-500" strokeWidth="6" strokeLinecap="round" />
+              <path d="M100 40L130 55L100 70" className="fill-indigo-500" />
+              <path d="M50 80L58 75L62 82L50 80Z" className="fill-emerald-400 animate-bounce" style={{ animationDuration: '3s' }} />
+              <path d="M150 60L155 52L162 58L150 60Z" className="fill-amber-400 animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }} />
+            </svg>
+          </div>
+          <h3 className="text-xl text-slate-900 dark:text-white font-black uppercase tracking-widest mb-2">No Active Goals</h3>
+          <p className="text-slate-500 text-sm mb-8 mx-auto max-w-md leading-relaxed">Goals transform a random walk into a chase. Setting clear objectives is the first step in turning the invisible into the visible.</p>
+          <button onClick={() => setIsModalOpen(true)} className="btn-primary px-8 py-3.5 shadow-lg shadow-indigo-500/20 font-bold uppercase tracking-widest text-sm transition-all hover:scale-105 active:scale-95">Set My First Goal</button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
