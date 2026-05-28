@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { signInWithPopup, signOut } from 'firebase/auth';
+import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from './firebase/config';
 import { MainLayout } from './components/layout/MainLayout';
 import { Page } from './components/layout/Sidebar';
@@ -21,7 +21,7 @@ import { Login } from './pages/Login';
 import { Loader2 } from 'lucide-react';
 
 export default function App() {
-  const { user, profile, loading, completeOnboarding, loginAsDemo } = useAuth();
+  const { user, profile, loading, completeOnboarding, loginAsDemo, logout } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>('dashboard');
 
   const handleLogin = async () => {
@@ -39,8 +39,7 @@ export default function App() {
 
   const handleLogout = async () => {
     try {
-      localStorage.removeItem('demo_user_profile');
-      await signOut(auth);
+      await logout();
       setCurrentPage('dashboard');
     } catch (error) {
       console.error('Logout failed', error);

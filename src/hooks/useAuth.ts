@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { 
   onAuthStateChanged, 
-  User 
+  User,
+  signOut
 } from 'firebase/auth';
 import { 
   doc, 
@@ -188,5 +189,17 @@ export function useAuth() {
     setProfile(prev => prev ? { ...prev, wearables: updatedWearables } : null);
   };
 
-  return { user, profile, loading, completeOnboarding, updatePrivacyPreferences, updateWearableIntegration, loginAsDemo };
+  const logout = async () => {
+    localStorage.removeItem('demo_user_profile');
+    localStorage.removeItem('demo_profile_data');
+    setUser(null);
+    setProfile(null);
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error('SignOut error:', e);
+    }
+  };
+
+  return { user, profile, loading, completeOnboarding, updatePrivacyPreferences, updateWearableIntegration, loginAsDemo, logout };
 }

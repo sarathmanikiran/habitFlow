@@ -31,7 +31,7 @@ import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../hooks/useAuth';
 
 export function Settings() {
-  const { user, profile, updatePrivacyPreferences, updateWearableIntegration } = useAuth();
+  const { user, profile, updatePrivacyPreferences, updateWearableIntegration, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
@@ -43,7 +43,7 @@ export function Settings() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logout();
     } catch (error) {
       console.error('Logout failed', error);
     }
@@ -269,7 +269,7 @@ export function Settings() {
       console.error('Account deletion failed', error);
       if (error.code === 'auth/requires-recent-login') {
         alert('This operation is sensitive and requires recent authentication. Please log in again.');
-        await signOut(auth);
+        await logout();
       } else {
         alert('Failed to delete account. Please try again.');
       }
