@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   Flame, 
@@ -11,7 +11,8 @@ import {
   Trophy,
   Activity,
   Award,
-  Medal
+  Medal,
+  Share2
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { 
@@ -26,6 +27,7 @@ import {
 
 import { useHabitData } from '../hooks/useHabitData';
 import { format, subDays, isSameDay } from 'date-fns';
+import { ShareStreakModal } from '../components/ShareStreakModal';
 
 const HABIT_COLORS = [
   { value: 'indigo', bg: 'bg-indigo-500', text: 'text-indigo-400' },
@@ -41,6 +43,7 @@ const HABIT_COLORS = [
 export function Dashboard({ userName, onPageChange }: { userName: string, onPageChange: (page: any) => void }) {
   const { habits, completions, toggleCompletion, calculateStreak } = useHabitData();
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const [shareStreak, setShareStreak] = useState<any>(null);
   
   const activeHabits = useMemo(() => habits.filter(h => !h.archived), [habits]);
 
@@ -239,14 +242,23 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
               {streaks.sort((a,b) => b.streak - a.streak).slice(0, 3).map(s => {
                   const habitColor = HABIT_COLORS.find(c => c.value === s.color);
                   return (
-                    <div key={s.id} className="flex items-center justify-between">
+                    <div key={s.id} className="flex items-center justify-between group">
                         <div className="flex items-center gap-3">
                             <div className={cn("w-2 h-2 rounded-full", habitColor?.bg || "bg-indigo-500")} />
                             <span className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px]">{s.name}</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                            <Flame className="w-3 h-3 text-orange-500" />
-                            <span className="text-xs font-black text-slate-900 dark:text-white">{s.streak}</span>
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                                <Flame className="w-3 h-3 text-orange-500" />
+                                <span className="text-xs font-black text-slate-900 dark:text-white">{s.streak}</span>
+                            </div>
+                            <button
+                              onClick={() => setShareStreak(s)}
+                              className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-indigo-400 transition-all focus:opacity-100"
+                              title="Share Streak"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                            </button>
                         </div>
                     </div>
                   )
@@ -255,31 +267,60 @@ export function Dashboard({ userName, onPageChange }: { userName: string, onPage
             </div>
           </div>
 
-          <div className="glass-card p-6">
+          <div className="glass-card p-6 overflow-hidden">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400">Activity Intensity</h4>
-              <span className="text-[10px] text-slate-400 dark:text-slate-600">Last 14 days</span>
+              <h4 className="text-sm font-bold text-slate-500 dark:text-slate-400">Contribution Heatmap</h4>
+              <span className="text-[10px] text-slate-400 dark:text-slate-600">Last 15 weeks</span>
             </div>
-            <div className="grid grid-cols-7 gap-1.5">
-              {[...Array(14)].map((_, i) => {
-                const day = subDays(new Date(), 13 - i);
-                const dayStr = format(day, 'yyyy-MM-dd');
-                const hasComp = completions.some(c => c.date === dayStr && c.completed);
-                return (
-                  <div 
-                    key={i} 
-                    className={cn(
-                      "aspect-square rounded-sm transition-all duration-500",
-                      hasComp ? "bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" : "bg-slate-200 dark:bg-white/5"
-                    )}
-                  ></div>
-                );
-              })}
+            
+            <div className="overflow-x-auto pb-2 scrollbar-hide">
+              <div className="grid grid-flow-col grid-rows-7 gap-1.5 min-w-max">
+                {Array.from({ length: 105 }).map((_, i) => {
+                  const day = subDays(new Date(), 104 - i);
+                  const dayStr = format(day, 'yyyy-MM-dd');
+                  const count = completions.filter(c => c.date === dayStr && c.completed && activeHabits.some(h => h.id === c.habitId)).length;
+                  
+                  // Heatmap colors based on intensity
+                  let bgClass = "bg-slate-200 dark:bg-white/[0.03]";
+                  if (count > 0) bgClass = "bg-indigo-300 dark:bg-indigo-500/40";
+                  if (count > 2) bgClass = "bg-indigo-400 dark:bg-indigo-500/60";
+                  if (count > 4) bgClass = "bg-indigo-500 dark:bg-indigo-500/80";
+                  if (count > 6) bgClass = "bg-indigo-600 dark:bg-indigo-500";
+
+                  return (
+                    <div 
+                      key={i} 
+                      title={`${format(day, 'MMM do, yyyy')}: ${count} habits`}
+                      className={cn(
+                        "w-3 h-3 md:w-3.5 md:h-3.5 rounded-[2px] transition-all duration-300",
+                        bgClass
+                      )}
+                    ></div>
+                  );
+                })}
+              </div>
+              <div className="flex justify-between items-center mt-3 text-[10px] font-bold text-slate-400">
+                <span>Less</span>
+                <div className="flex gap-1">
+                  <div className="w-2.5 h-2.5 rounded-[2px] bg-slate-200 dark:bg-white/[0.03]"></div>
+                  <div className="w-2.5 h-2.5 rounded-[2px] bg-indigo-300 dark:bg-indigo-500/40"></div>
+                  <div className="w-2.5 h-2.5 rounded-[2px] bg-indigo-400 dark:bg-indigo-500/60"></div>
+                  <div className="w-2.5 h-2.5 rounded-[2px] bg-indigo-500 dark:bg-indigo-500/80"></div>
+                  <div className="w-2.5 h-2.5 rounded-[2px] bg-indigo-600 dark:bg-indigo-500"></div>
+                </div>
+                <span>More</span>
+              </div>
             </div>
-            <p className="text-[10px] text-slate-500 mt-4 text-center">Consistent effort yields the best results.</p>
           </div>
         </div>
       </div>
+      
+      <ShareStreakModal 
+        isOpen={!!shareStreak}
+        onClose={() => setShareStreak(null)}
+        streak={shareStreak}
+        userName={userName}
+      />
     </div>
   );
 }
