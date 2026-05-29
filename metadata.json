@@ -1,6 +1,6 @@
 {
   "name": "HabitFlow",
-  "description": "A modern, SaaS-style habit tracker with AI coaching, detailed stats, and cross-device syncing.",
+  "description": "Professional student-focused AI habit tracker featuring flexible streak protection, connected routines, and emotional correlation reports.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
