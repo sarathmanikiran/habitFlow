@@ -5,12 +5,15 @@ interface SEOProps {
   description: string;
   canonical?: string;
   keywords?: string;
+  image?: string;
+  type?: 'website' | 'article';
 }
 
-export function useSEO({ title, description, canonical, keywords }: SEOProps) {
+export function useSEO({ title, description, canonical, keywords, image, type }: SEOProps) {
   useEffect(() => {
     // Update Document Title
-    document.title = title.includes('HabitFlow') ? title : `${title} | HabitFlow`;
+    const formattedTitle = title.includes('HabitFlow') ? title : `${title} | HabitFlow`;
+    document.title = formattedTitle;
 
     // Update Meta Description
     let metaDescription = document.querySelector('meta[name="description"]');
@@ -39,5 +42,33 @@ export function useSEO({ title, description, canonical, keywords }: SEOProps) {
     }
     const currentCanonical = canonical || window.location.origin + window.location.pathname;
     canonicalLink.setAttribute('href', currentCanonical);
-  }, [title, description, canonical, keywords]);
+
+    // Update Open Graph and Twitter Tags dynamically
+    const defaultImage = `${window.location.origin}/og-image.png`;
+    const activeImage = image || defaultImage;
+
+    const opengraphTags: Record<string, string> = {
+      'og:title': formattedTitle,
+      'og:description': description,
+      'og:image': activeImage,
+      'og:url': currentCanonical,
+      'og:type': type || 'website',
+      'twitter:title': formattedTitle,
+      'twitter:description': description,
+      'twitter:image': activeImage,
+      'twitter:url': currentCanonical,
+    };
+
+    Object.entries(opengraphTags).forEach(([key, val]) => {
+      const isOg = key.startsWith('og:');
+      const attribute = isOg ? 'property' : 'name';
+      let tag = document.querySelector(`meta[${attribute}="${key}"]`);
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute(attribute, key);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', val);
+    });
+  }, [title, description, canonical, keywords, image, type]);
 }

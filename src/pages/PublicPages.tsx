@@ -16,135 +16,14 @@ import {
   Send,
   Linkedin,
   Twitter,
-  Github
+  Github,
+  Copy,
+  Check
 } from 'lucide-react';
 import { navigate, handleSEOAnchorClick } from '../lib/router';
 import { useSEO } from '../hooks/useSEO';
-
-// Data for Blog Posts
-export const BLOG_POSTS = [
-  {
-    slug: 'best-habits-for-students',
-    title: 'The Best Habits for Students: Designing Your Peak Academic Routine',
-    excerpt: 'Discover the core study, wellness, and reflection habits that separate top-performing students from the rest, complete with a streak tracker built for schedules.',
-    date: 'May 28, 2026',
-    readTime: '6 min read',
-    category: 'Academics',
-    keywords: 'habit tracker for students, self improvement app, study routine guide, productivity app',
-    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
-    content: `
-## Why Standard Habits Fail Students
-
-Most students approach a new semester with high hopes and a massive list of rigid goals. They plan to wake up at 5:00 AM, study for eight hours straight, and never check social media again. Within four days, exam stress hits, a late-night study session breaks their rhythm, and they abandon tracking altogether.
-
-To succeed academically, you need a **habit tracker for students** that understands the natural chaos of high school and university life. Real self-improvement isn't about rigid perfection; it's about building a robust study routine guide and maintaining daily momentum without guilt.
-
-### The Peak Academic Habit Stack
-
-Academic success isn't determined by IQ; it's fueled by highly consistent daily routines. Here are the four foundational habits that top-performing students build using a flexible **streak tracker** like HabitFlow:
-
-1. **The 25-Minute Deep Work Sprint**: Instead of scheduling an intimidating "6-hour study session", commit to just one 25-minute Pomodoro block of pure focus. Once you start, the friction disappears.
-2. **The Active Recall Audit**: Spend 10 minutes at the end of every school day explaining what you learned in your own words. Don't just re-read notes—prove you understand them.
-3. **The Fluid Option Routine**: Gym closed? Do a 15-minute home workout. Too tired to read a textbook chapter? Listen to a 10-minute podcast. Our **productivity app** specializes in these connected "OR" habits so your streak never dies because life happened.
-4. **The Weekly Reflection Checklist**: Spend Sunday mornings reviewing what worked, what broke, and what you will adjust. This builds long-term self-awareness.
-
-### Building Your Perfect Study Routine Guide
-
-To make these routines stick, use an association trigger. Tie your new student habits to actions you already perform. For example: "As soon as I open my laptop in the campus library, I will immediately start a 25-minute deep study sprint."
-
-By utilizing HabitFlow's custom streak protection, you can flag days when midterms or late-night projects took priority, preserving your consistency and keeping motivation high.
-    `
-  },
-  {
-    slug: 'ai-productivity-guide',
-    title: 'AI Productivity Guide: How Machine Learning Can Supercharge Your Habits',
-    excerpt: 'How to use an AI habit tracker to analyze behavior patterns, predict burnout, and receive daily coaching tailored specifically to your personality.',
-    date: 'May 24, 2026',
-    readTime: '7 min read',
-    category: 'AI & Tech',
-    keywords: 'AI habit tracker, productivity app, self improvement app, streak tracker',
-    image: 'https://images.unsplash.com/photo-1677442136019-21780efad99a?w=800&auto=format&fit=crop&q=80',
-    content: `
-## The Evolution of Behavior Design
-
-For decades, behavioral design was limited to paper logs and simplistic notification reminders. You wrote down "exercise" in a notebook, or a standard app beeped at you at 7:00 PM. If you missed a day, the app did nothing but display an unhelpful, rigid "Streak: 0" indicator. 
-
-Today, a modern **AI habit tracker** acts as a personal behavior scientist. By analyzing completion rates, stress trends, and chronological context, algorithmic AI coaches can proactively suggest habit adjustments before you fall off the wagon.
-
-### How an AI Habit Tracker Protects Your Streaks
-
-An intelligent **productivity app** shifts the focus from rigid punishment to adaptive guidance:
-
-* **Predictive Friction Reduction**: If your AI coach detects that your consistency drops drastically on Thursday evenings, it can recommend shrinking your "Deep Work" habit from 60 minutes to an elegant 20 minutes on Thursdays.
-* **Intelligent Accountability Coaching**: Our platform leverages deep generative reasoning via the OpenRouter API. It parses your logs and checks details like "Gym missed because of high fatigue." It then steps in as a certified coach, advising you on better evening wind-down sequences.
-* **Emotional Correlation Analytics**: Success in a **self-improvement app** is deeply connected to your mood. By logging your emotional state alongside your habits, HabitFlow creates beautiful heatmaps showing the direct impact of high-stress exam periods on consistency.
-
-### Making the AI Assistant Work for You
-
-When talking to your AI coach, treat it like an elite personal trainer. Be explicit: tell it your current major goals (like earning an A in organic chemistry or running a 10k), describe your typical energy slumps during the week, and ask for a custom daily routine. 
-
-With HabitFlow, you are not just logging checkboxes; you are collaborating on a digital-twin model of your cognitive performance.
-    `
-  },
-  {
-    slug: 'study-routine-guide',
-    title: 'The Ultimate Study Routine Guide for High-Stakes Exams',
-    excerpt: 'Maximize memory retention and eliminate exam anxiety with a science-backed routine designed around active recall and flexible streak protection.',
-    date: 'May 20, 2026',
-    readTime: '5 min read',
-    category: 'Study Tech',
-    keywords: 'study routine guide, habit tracker for students, productivity app, streak tracker',
-    image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
-    content: `
-## Eliminating the Cramming Cycle
-
-Many students spend weeks procrastinating, only to pull desperate, high-sugar all-nighters right before exams. This cramming cycle increases cortisol, destroys sleep quality, and leads to rapid forgetfulness immediately after the test. 
-
-To break this loop, you need a sustainable **study routine guide** that stretches across the entire semester, backed by a **streak tracker** to keep you moving forward step-by-step.
-
-### The Science of Spaced Repetition
-
-The brain is a muscle that strengthens when it is forced to retrieve information repeatedly over increasing time intervals. To implement this in your daily habits:
-
-1. **Review Notes in 1-3-7-14 Day Intervals**: After learning a concept, test your recall tomorrow, three days from now, in a week, and then in two weeks. This cements the facts into long-term memory.
-2. **Use a Habit Tracker for Students**: Log each review session as a high-value habit. Watching your streak multiply generates visual momentum, converting passive study goals into an addicting gamified experience.
-3. **The Option-Stacking Buffer**: Keep study stress manageable by giving yourself two pathways. For example: "Study 45 minutes of biology slides OR perform 20 minutes of flashcard active recall." This versatility ensures you keep the habit alive.
-
-With HabitFlow's visual progress panels, you can check exactly which subjects you completed, view your streak counts, and review personalized feedback from the AI coach to adjust your daily mental workload.
-    `
-  },
-  {
-    slug: 'morning-routine',
-    title: 'How to Build an Indestructible Morning Routine that Sticks',
-    excerpt: 'Ditch the snoozing and start your day with high-agency behaviors. Master your morning habits with these simple tips.',
-    date: 'May 15, 2026',
-    readTime: '5 min read',
-    category: 'Lifestyle',
-    keywords: 'morning routine, streak tracker, self improvement app, productivity app',
-    image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&auto=format&fit=crop&q=80',
-    content: `
-## The First hour Rules Your Day
-
-How you spend the initial 60 minutes of your morning sets the baseline cognitive state for the next 15 hours. If you start by grabbing your phone, scrolling social media feeds, and absorbing high-dopamine notifications, you train your brain to seek easy stimulation. 
-
-A high-performing **self-improvement app** guides you to build high-agency routines right out of bed, laying a foundation of productivity that makes the rest of your goals feel effortless.
-
-### Perfecting the First 3 Simple Steps
-
-An indestructible morning routine doesn't need to be 3 hours of meditation and cold plunges. Highly successful students and creators keep it small and repeatable:
-
-* **Hydrate Before Screen Time**: Place a glass of water on your desk. Drink it first thing before opening any screens. It flushes cortisol and wakes up your metabolism.
-* **Natural Light Exposure**: Step outside or look out an open window for 5 minutes. This stops melatonin production and locks in your body's circadian clock.
-* **The One-Sentence Plan**: Write down exactly one major high-impact goal for the day. This simple focus clears out cognitive clutter.
-
-### How to Stay Consistent with a Streak Tracker
-
-The main reason morning habits fail is that people create an all-or-nothing trap. If they wake up late, they scrap the whole routine. 
-
-By setting up a **streak tracker** like HabitFlow, you can utilize custom streak freezes or lower-effort options. Woke up late? Skip the gym, log an active stretch, and protect your digital streak. Developing the psychological identity of a consistent person is far more important than any single day's workout duration.
-    `
-  }
-];
+import { BLOG_POSTS } from '../data/blogData';
+export { BLOG_POSTS };
 
 // Reusable SEO Layout Frame
 export function PublicLayout({ children, currentPath, onLogin, onDemoLogin }: { children: React.ReactNode; currentPath: string; onLogin: () => void; onDemoLogin: () => void }) {
@@ -332,6 +211,55 @@ export function BlogsPage({ onLogin }: { onLogin: () => void }) {
     keywords: 'AI habit tracker, habit tracker for students, productivity app, self improvement app, study routine guide, streak tracker'
   });
 
+  // State for the interactive Streak Badge & Profile Embed Builder
+  const [badgeUsername, setBadgeUsername] = useState('alex_achiever');
+  const [badgeStreak, setBadgeStreak] = useState('18');
+  const [badgeColor, setBadgeColor] = useState('indigo');
+  const [badgeIcon, setBadgeIcon] = useState('flame');
+  const [badgeRounded, setBadgeRounded] = useState('full');
+  const [copiedFormat, setCopiedFormat] = useState<'markdown' | 'html' | null>(null);
+
+  // Available option palettes
+  const colorMap: Record<string, { bg: string; text: string; border: string; accent: string; fill: string }> = {
+    indigo: { bg: 'bg-indigo-950/50', text: 'text-indigo-200', border: 'border-indigo-500/30', accent: 'bg-indigo-500', fill: '#6366f1' },
+    emerald: { bg: 'bg-emerald-950/50', text: 'text-emerald-200', border: 'border-emerald-500/30', accent: 'bg-emerald-500', fill: '#10b981' },
+    amber: { bg: 'bg-amber-950/50', text: 'text-amber-200', border: 'border-amber-500/30', accent: 'bg-amber-500', fill: '#f59e0b' },
+    rose: { bg: 'bg-rose-950/50', text: 'text-rose-200', border: 'border-rose-500/30', accent: 'bg-rose-500', fill: '#f43f5e' },
+    cyan: { bg: 'bg-slate-900/80', text: 'text-cyan-200', border: 'border-cyan-500/30', accent: 'bg-cyan-500', fill: '#06b6d4' }
+  };
+
+  const roundedClasses: Record<string, string> = {
+    full: 'rounded-full',
+    lg: 'rounded-2xl',
+    none: 'rounded-none'
+  };
+
+  // SVG Render Helper for the Badge URL or preview
+  const getBadgeIconSvg = () => {
+    switch (badgeIcon) {
+      case 'flame': return '⚡';
+      case 'sparkles': return '✨';
+      case 'star': return '⭐';
+      case 'book': return '📚';
+      case 'check': return '🏆';
+      default: return '⚡';
+    }
+  };
+
+  const activePalette = colorMap[badgeColor] || colorMap.indigo;
+
+  // Real embed links that point back safely to HabitFlow, signaling premium authority to Google crawler bots
+  const markdownEmbedCode = `[![${badgeUsername}'s Streak Badge](https://habitflow.app/api/badge?user=${badgeUsername}&streak=${badgeStreak}&color=${badgeColor}&icon=${badgeIcon})](https://habitflow.app/)`;
+  const htmlEmbedCode = `<a href="https://habitflow.app/" target="_blank">\n  <img src="https://img.shields.io/badge/HabitFlow-${badgeUsername}_%E2%80%A2_${badgeStreak}_Day_Streak-${badgeColor}?style=flat-square&logo=visual-studio-code" alt="HabitFlow Streak Badge" />\n</a>`;
+
+  const copyToClipboard = (type: 'markdown' | 'html') => {
+    const code = type === 'markdown' ? markdownEmbedCode : htmlEmbedCode;
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedFormat(type);
+      setTimeout(() => setCopiedFormat(null), 2500);
+    });
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       <div className="text-center max-w-3xl mx-auto mb-16">
@@ -386,8 +314,169 @@ export function BlogsPage({ onLogin }: { onLogin: () => void }) {
         ))}
       </div>
 
+      {/* Interactive Profile Badge & Embed Builder Widget - Drives Viral Backlinks */}
+      <section className="mt-20 p-8 md:p-12 rounded-[32px] border border-white/5 bg-black/40 backdrop-blur-3xl relative overflow-hidden" id="streak-embed-builder">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/5 blur-[120px] rounded-full pointer-events-none" />
+        
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/10">Inbound Organic Backlinks</span>
+          <h2 className="text-2xl md:text-3xl font-black text-white mt-3 mb-4">Academic Embed Code Generator</h2>
+          <p className="text-slate-400 text-xs md:text-sm">
+            Showcase your hard-earned consistent streaks on your GitHub, UCLA/Stanford student profiles, Notion workspaces, or engineering portfolio. Highly customized to fit your student branding.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-stretch">
+          
+          {/* Customizer Panel */}
+          <div className="lg:col-span-2 space-y-5 bg-white/[0.01] p-6 rounded-2xl border border-white/5 flex flex-col justify-between">
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">Student Username</label>
+                <input 
+                  type="text" 
+                  value={badgeUsername}
+                  onChange={(e) => setBadgeUsername(e.target.value.replace(/\s+/g, '_'))}
+                  placeholder="alex_achiever"
+                  className="w-full px-3 py-2 bg-white/[0.02] border border-white/10 hover:border-white/20 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-white placeholder-slate-700 outline-none transition-all"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-35">
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">Streak Count</label>
+                  <input 
+                    type="number" 
+                    value={badgeStreak}
+                    onChange={(e) => setBadgeStreak(e.target.value)}
+                    min="0"
+                    className="w-full px-3 py-2 bg-white/[0.02] border border-white/10 hover:border-white/20 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-white outline-none transition-all"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1.5">Border Style</label>
+                  <select 
+                    value={badgeRounded}
+                    onChange={(e) => setBadgeRounded(e.target.value)}
+                    className="w-full px-3 py-2 bg-black border border-white/10 hover:border-white/20 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs text-white outline-none transition-all"
+                  >
+                    <option value="full">Pill shape</option>
+                    <option value="lg">Soft rounded</option>
+                    <option value="none">Sharp edges</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-2">Theme Color</label>
+                <div className="flex gap-2.5">
+                  {Object.keys(colorMap).map((cKey) => (
+                    <button
+                      key={cKey}
+                      onClick={() => setBadgeColor(cKey)}
+                      className={`w-6 h-6 rounded-full transition-all border-2 ${badgeColor === cKey ? 'border-white scale-110' : 'border-transparent'}`}
+                      style={{ backgroundColor: colorMap[cKey].fill }}
+                      title={`Select ${cKey}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-2">Streak Icon</label>
+                <div className="grid grid-cols-5 gap-2">
+                  {[
+                    { key: 'flame', label: '⚡' },
+                    { key: 'sparkles', label: '✨' },
+                    { key: 'star', label: '⭐' },
+                    { key: 'book', label: '📚' },
+                    { key: 'check', label: '🏆' }
+                  ].map((ic) => (
+                    <button
+                      key={ic.key}
+                      onClick={() => setBadgeIcon(ic.key)}
+                      className={`py-1.5 border rounded-lg text-xs hover:bg-white/5 transition-all text-center ${badgeIcon === ic.key ? 'border-indigo-500 bg-indigo-500/10 text-white font-bold' : 'border-white/5 text-slate-400'}`}
+                    >
+                      {ic.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/5">
+              <p className="text-[10px] text-slate-500 leading-relaxed">
+                Tip: Copy either code format to backlink your profile pages directly. Every active backlink increases HabitFlow rating score on Google!
+              </p>
+            </div>
+          </div>
+
+          {/* Real-time Preview Panel */}
+          <div className="lg:col-span-3 space-y-6 flex flex-col justify-between">
+            <div className="bg-white/[0.01] p-6 rounded-2xl border border-white/5 flex flex-col justify-center items-center py-10">
+              <span className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mb-4">Badges Live Preview</span>
+              
+              {/* Actual HTML SVG Mockup */}
+              <div className={`flex items-center gap-2 px-4 py-2 border ${activePalette.bg} ${activePalette.border} ${roundedClasses[badgeRounded]} shadow-lg transition-all shadow-${badgeColor}-500/10`}>
+                <span className="text-sm">{getBadgeIconSvg()}</span>
+                <span className="text-xs font-mono font-bold tracking-tight text-white">{badgeUsername}</span>
+                <div className="h-3.5 w-px bg-white/10" />
+                <span className={`text-xs font-black ${activePalette.text}`}>{badgeStreak} DAY STREAK</span>
+              </div>
+            </div>
+
+            {/* Embed Codes Code Block container */}
+            <div className="space-y-3.5">
+              
+              {/* Markdown code block */}
+              <div className="bg-[#0C0C12] border border-white/5 rounded-xl p-3 relative group">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-[9px] font-mono font-semibold text-slate-500">MARKDOWN (For GitHub Readme)</span>
+                  <button 
+                    onClick={() => copyToClipboard('markdown')}
+                    className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all inline-flex items-center gap-1 text-[9px] font-bold"
+                  >
+                    {copiedFormat === 'markdown' ? (
+                      <><Check className="w-2.5 h-2.5 text-emerald-400" /> Copied!</>
+                    ) : (
+                      <><Copy className="w-2.5 h-2.5" /> Copy Code</>
+                    )}
+                  </button>
+                </div>
+                <pre className="text-[10px] font-mono text-slate-400 overflow-x-auto select-all whitespace-pre-wrap leading-relaxed py-1">
+                  {markdownEmbedCode}
+                </pre>
+              </div>
+
+              {/* HTML code block */}
+              <div className="bg-[#0C0C12] border border-white/5 rounded-xl p-3 relative group">
+                <div className="flex justify-between items-center mb-1.5">
+                  <span className="text-[9px] font-mono font-semibold text-slate-500">HTML CODE (For Portfolios &amp; Blogs)</span>
+                  <button 
+                    onClick={() => copyToClipboard('html')}
+                    className="p-1 rounded bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all inline-flex items-center gap-1 text-[9px] font-bold"
+                  >
+                    {copiedFormat === 'html' ? (
+                      <><Check className="w-2.5 h-2.5 text-emerald-400" /> Copied!</>
+                    ) : (
+                      <><Copy className="w-2.5 h-2.5" /> Copy Code</>
+                    )}
+                  </button>
+                </div>
+                <pre className="text-[10px] font-mono text-slate-400 overflow-x-auto select-all whitespace-pre-wrap leading-relaxed py-1">
+                  {htmlEmbedCode}
+                </pre>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
       {/* Highlight Promotion Banner */}
-      <div className="mt-20 p-8 md:p-12 rounded-[32px] border border-indigo-500/20 bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-[#0A0A0F] text-center relative overflow-hidden">
+      <div className="mt-14 p-8 md:p-12 rounded-[32px] border border-indigo-500/20 bg-gradient-to-br from-indigo-950/40 via-purple-950/20 to-[#0A0A0F] text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-48 h-48 bg-indigo-500/10 blur-3xl rounded-full" />
         <h3 className="text-2xl md:text-3xl font-bold mb-4">Want to track these habits on a beautiful dashboard?</h3>
         <p className="text-slate-400 text-sm max-w-xl mx-auto mb-8">
@@ -407,6 +496,7 @@ export function BlogsPage({ onLogin }: { onLogin: () => void }) {
 // 2. SINGLE BLOG POST READER
 export function BlogPostReader({ slug, onLogin }: { slug: string; onLogin: () => void }) {
   const post = BLOG_POSTS.find(p => p.slug === slug);
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(null);
 
   if (!post) {
     return (
@@ -423,7 +513,9 @@ export function BlogPostReader({ slug, onLogin }: { slug: string; onLogin: () =>
   useSEO({
     title: `${post.title} | HabitFlow`,
     description: post.excerpt,
-    keywords: post.keywords
+    keywords: post.keywords,
+    image: post.image,
+    type: 'article'
   });
 
   return (
@@ -445,7 +537,7 @@ export function BlogPostReader({ slug, onLogin }: { slug: string; onLogin: () =>
           </span>
           <span className="text-xs text-slate-500">• {post.readTime}</span>
         </div>
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+        <h1 className="text-4xl md:text-5xl lg:text-3xl font-extrabold tracking-tight text-white mb-6 leading-tight">
           {post.title}
         </h1>
         <div className="flex items-center gap-3 border-y border-white/5 py-4">
@@ -465,6 +557,7 @@ export function BlogPostReader({ slug, onLogin }: { slug: string; onLogin: () =>
           referrerPolicy="no-referrer"
           src={post.image} 
           alt={post.title} 
+          loading="eager"
           className="w-full h-full object-cover" 
         />
       </div>
@@ -500,6 +593,41 @@ export function BlogPostReader({ slug, onLogin }: { slug: string; onLogin: () =>
               );
             })}
           </div>
+
+          {/* Interactive Collapsible FAQ Section inside the Article Body to capture featured search snippets */}
+          {post.faqs && post.faqs.length > 0 && (
+            <div className="mt-14 pt-8 border-t border-white/10" id="article-faqs">
+              <h3 className="text-xl font-bold tracking-tight text-white mb-6 flex items-center gap-2">
+                <Sparkles className="text-yellow-400 w-4 h-4 fill-yellow-400" /> Frequently Asked Questions
+              </h3>
+              
+              <div className="space-y-3">
+                {post.faqs.map((faq, fIdx) => {
+                  const isOpen = openFaqIdx === fIdx;
+                  return (
+                    <div 
+                      key={fIdx}
+                      className="border border-white/5 rounded-2xl bg-white/[0.01]/50 backdrop-blur-md overflow-hidden transition-all duration-200"
+                    >
+                      <button
+                        onClick={() => setOpenFaqIdx(isOpen ? null : fIdx)}
+                        className="w-full px-5 py-4 text-left flex items-center justify-between text-xs md:text-sm font-semibold text-white hover:text-indigo-400 transition-colors bg-white/[0.01]"
+                      >
+                        <span>{faq.question}</span>
+                        <span className={`text-base font-bold transition-transform duration-200 ${isOpen ? 'rotate-45' : ''}`}>＋</span>
+                      </button>
+                      
+                      {isOpen && (
+                        <div className="px-5 pb-5 pt-2 text-xs md:text-sm text-slate-400 leading-relaxed">
+                          {faq.answer}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dynamic Context Conversion Panel */}

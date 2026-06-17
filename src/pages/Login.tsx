@@ -67,12 +67,20 @@ export function Login({ onLogin, onDemoLogin }: LoginProps) {
     try {
       await onLogin();
     } catch (e: any) {
-      console.error(e);
-      const isCancelled = e?.message?.includes('cancelled') || e?.code?.includes('cancelled') || e?.message?.includes('closed') || e?.code?.includes('closed');
+      console.error("Login component caught error:", e);
+      const errMessage = e?.message || '';
+      const errCode = e?.code || '';
+      const errStr = (errMessage + ' ' + errCode).toLowerCase();
+      
+      const isCancelled = errStr.includes('cancelled') || errStr.includes('closed') || errStr.includes('cancel');
+      const isNetwork = errStr.includes('network') || errStr.includes('blocked') || errStr.includes('adblock');
+      
       if (isCancelled) {
-        setErrorMessage("Standard login was dismissed or blocked. Try our fully functional, zero-friction Guest/Demo Mode below!");
+        setErrorMessage("Standard login was dismissed, closed, or blocked by the browser. Feel free to try again, or bypass directly with our fully functional Guest/Demo Mode below!");
+      } else if (isNetwork) {
+        setErrorMessage("Network connection error: Google login was blocked. This is commonly caused by ad-blockers, Brave shields, cross-site tracker blocks, or preview iframe policies. Please disable shields or use our fully functional Guest/Demo Mode below to start instantly!");
       } else {
-        setErrorMessage(e?.message || "Standard login failed. Please feel free to bypass this with Guest/Demo Mode below.");
+        setErrorMessage(e?.message || "Standard login failed due to a system or iframe restriction. Please use our zero-friction Guest/Demo Mode below.");
       }
     } finally {
       setIsLoggingIn(false);

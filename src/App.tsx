@@ -9,27 +9,33 @@ import { AnimatePresence } from 'motion/react';
 import { navigate } from './lib/router';
 import { useSEO } from './hooks/useSEO';
 
-// Core Pages
-import { Dashboard } from './pages/Dashboard';
-import { Habits } from './pages/Habits';
-import { Calendar } from './pages/Calendar';
-import { Stats } from './pages/Stats';
-import { AICoach } from './pages/AICoach';
-import { Goals } from './pages/Goals';
-import { Settings } from './pages/Settings';
-import { Login } from './pages/Login';
+import { PublicLayout, BLOG_POSTS } from './pages/PublicPages';
 
-// Public SEO and Blogging Pages
-import { 
-  PublicLayout, 
-  BlogsPage, 
-  BlogPostReader, 
-  AboutPage, 
-  ContactPage, 
-  PrivacyPolicyPage, 
-  TermsOfServicePage,
-  BLOG_POSTS
-} from './pages/PublicPages';
+// Dynamic code-splitting for child views & modals
+const Dashboard = React.lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Habits = React.lazy(() => import('./pages/Habits').then(m => ({ default: m.Habits })));
+const Calendar = React.lazy(() => import('./pages/Calendar').then(m => ({ default: m.Calendar })));
+const Stats = React.lazy(() => import('./pages/Stats').then(m => ({ default: m.Stats })));
+const AICoach = React.lazy(() => import('./pages/AICoach').then(m => ({ default: m.AICoach })));
+const Goals = React.lazy(() => import('./pages/Goals').then(m => ({ default: m.Goals })));
+const Settings = React.lazy(() => import('./pages/Settings').then(m => ({ default: m.Settings })));
+const Login = React.lazy(() => import('./pages/Login').then(m => ({ default: m.Login })));
+
+const BlogsPage = React.lazy(() => import('./pages/PublicPages').then(m => ({ default: m.BlogsPage })));
+const BlogPostReader = React.lazy(() => import('./pages/PublicPages').then(m => ({ default: m.BlogPostReader })));
+const AboutPage = React.lazy(() => import('./pages/PublicPages').then(m => ({ default: m.AboutPage })));
+const ContactPage = React.lazy(() => import('./pages/PublicPages').then(m => ({ default: m.ContactPage })));
+const PrivacyPolicyPage = React.lazy(() => import('./pages/PublicPages').then(m => ({ default: m.PrivacyPolicyPage })));
+const TermsOfServicePage = React.lazy(() => import('./pages/PublicPages').then(m => ({ default: m.TermsOfServicePage })));
+
+// Loading spinner fallback optimized for code split transitions
+function LazySpinner() {
+  return (
+    <div className="w-full min-h-[400px] flex items-center justify-center py-20">
+      <Loader2 className="w-8 h-8 text-indigo-600 dark:text-indigo-500 animate-spin" />
+    </div>
+  );
+}
 
 import { Loader2 } from 'lucide-react';
 
@@ -54,11 +60,8 @@ export default function App() {
       navigate('/dashboard');
     } catch (error: any) {
       console.error('Login failed', error);
-      if (error?.code === 'auth/network-request-failed') {
-        alert("Network Error: Could not connect to authentication server. This is often caused by ad blockers, brave shields, or cross-site tracking prevention. Please disable them for this site and try again.");
-      } else if (error?.code !== 'auth/popup-closed-by-user') {
-        alert(`Login failed: ${error.message}`);
-      }
+      // Rethrow to let callers (like Login page) display context-appropriate feedback
+      throw error;
     }
   };
 
@@ -122,14 +125,24 @@ export default function App() {
         onLogin={user ? () => navigate('/dashboard') : handleLogin} 
         onDemoLogin={user ? () => navigate('/dashboard') : loginAsDemo}
       >
-        {renderPublicPage()}
+        <React.Suspense fallback={<LazySpinner />}>
+          {renderPublicPage()}
+        </React.Suspense>
       </PublicLayout>
     );
   }
 
   // 2. UNAUTHENTICATED PRIVATE ACCESS -> REDIRECT TO HOME LANDING PAGE
   if (!user) {
-    return <Login onLogin={handleLogin} onDemoLogin={loginAsDemo} />;
+    return (
+      <React.Suspense fallback={
+        <div className="min-h-screen bg-white dark:bg-[#050505] flex items-center justify-center transition-colors duration-300">
+          <Loader2 className="w-10 h-10 text-indigo-600 dark:text-indigo-500 animate-spin" />
+        </div>
+      }>
+        <Login onLogin={handleLogin} onDemoLogin={loginAsDemo} />
+      </React.Suspense>
+    );
   }
 
   // 3. AUTHENTICATED WORKSPACE PANEL
@@ -166,7 +179,9 @@ export default function App() {
         onLogout={handleLogout}
         userName={user.displayName || 'Achiever'}
       >
-        {renderActivePageContent()}
+        <React.Suspense fallback={<LazySpinner />}>
+          {renderActivePageContent()}
+        </React.Suspense>
       </MainLayout>
 
       <AnimatePresence>
